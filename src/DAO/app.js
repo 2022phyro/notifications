@@ -1,11 +1,11 @@
 /**
- * @file app.js
- * @description This file contains the AppModel class for handling database operations. It alows us to manipulate
- * the schema to carry out database operations
- * @requires 'mongoose' for database operations.
- * @requires '../models/app' for the App schema.
- * @requires '../utils/encrypt' for encrypting the password and generating api keys.
- * @exports AppModel as a class for handling database operations.
+ * @file - app.js
+ * @description - This file contains the AppModel class for handling database operations. It alows us to manipulate
+ *              - the schema to carry out database operations
+ * @requires 'mongoose' - for database operations.
+ * @requires '../models/app' - for the App schema.
+ * @requires '../utils/encrypt' - for encrypting the password and generating api keys.
+ * @exports AppModel - as a class for handling database operations.
  */
 const App = require('../models/app')
 const { encryptPassword, generateSecret } = require('../../utils/encrypt')

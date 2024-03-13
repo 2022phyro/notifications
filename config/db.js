@@ -1,3 +1,8 @@
+/**
+ * @file config/db.js
+ * @description This file is responsible for connecting to the MongoDB database.
+ * @requires mongoose for making the connections to the database
+ */
 const mongoose = require('mongoose')
 
 const DB_USER = process.env.DB_USER
@@ -8,6 +13,12 @@ const DB_NAME = process.env.DB_NAME
 
 const databaseUri = `mongodb://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}`
 
+/**
+ * Connects to the MongoDB database using the provided database URI.
+ *
+ * @returns {Promise} A promise that resolves when the connection is successful.
+ * @throws {Error} If there is an error connecting to the database.
+ */
 function connect () {
   mongoose.connect(databaseUri, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {

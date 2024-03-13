@@ -7,7 +7,8 @@ const messageSchema = new mongoose.Schema({
   },
   created: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    expires: '20d'
   },
   notifiLimit: {
     type: Number,
