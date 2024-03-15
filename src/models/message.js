@@ -10,36 +10,26 @@ const messageSchema = new mongoose.Schema({
     default: Date.now,
     expires: '20d'
   },
-  notifiLimit: {
-    type: Number,
-    required: true
-  },
   appId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'App',
     required: true
   },
-  received: {
-    type: Boolean,
-    default: false
-  },
-  many: {
-    type: Boolean,
-    default: false
-  },
-  receiverCount: {
-    type: Number,
-    default: 0
-  },
-  maxRecipents: {
-    type: Number,
-    default: 0
-  },
-  recipents: {
-    type: Array[String],
-    default: []
+  recipents: [{
+    id: {
+      type: String,
+      required: true
+    },
+    seen: {
+      type: Boolean,
+      default: false
+    }
+  }],
+  slug: {
+    type: String,
+    required: true,
+    unique: true
   }
-
 })
 
 const Message = mongoose.model('Message', messageSchema)

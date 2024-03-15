@@ -56,9 +56,24 @@ async function consumeMessage (app) {
   }
 }
 
+async function addNewRecipents () {
+  try {
+    let message
+    await channel.consume('recipents', (msg) => {
+      message = msg.content.toString()
+      channel.ack(msg)
+    }, { noAck: false })
+    return JSON.parse(message)
+  } catch (error) {
+    console.error('Error while consuming message from queue recipents', error)
+    throw error
+  }
+}
+
 module.exports = {
   consumeMessage,
   createRabbitQueue,
   deleteRabbitQueue,
-  updateRabbitQueue
+  updateRabbitQueue,
+  addNewRecipents
 }

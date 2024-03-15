@@ -7,21 +7,18 @@
  * @exports MessageModel - as a class for handling database operations.
  */
 const Message = require('../models/message')
-
+const vA = require('../../utils/validate')
 /**
  * Represents a MessageModel.
  *
  * @class
  * @classdesc A class that represents a MessageModel.
  */
-function MessageModel (appId, body, notifiLimit, recipents, maxRecipents, many = false, received = false) {
+function MessageModel (appId, body, recipents, slug) {
   this.appId = appId
   this.body = body
-  this.notifiLimit = notifiLimit
-  this.maxRecipents = maxRecipents
+  this.slug = slug
   this.recipents = recipents
-  this.many = many
-  this.received = received
 }
 /**
  * Creates a new message and saves it to the database.
@@ -70,8 +67,7 @@ MessageModel.getMessage = async function (messageId, filters) {
     if (filters) {
       message = await message.findOne(filters)
     }
-    const result = await message.lean().exec()
-    return result
+    return message
   } catch (error) {
     console.error('Error while fetching Message', error)
     throw new Error('Error while fetching Message')
@@ -82,8 +78,8 @@ MessageModel.getMessage = async function (messageId, filters) {
  * Retrieves messages based on the provided filters.
  *
  * @param {Object} filters - The filters to apply when retrieving messages.
- * @returns {Promise<Array>} - A promise that resolves to an array of messages.
- * @throws {Error} - If there is an error while fetching messages.
+ * @returns {Promise<Array>} A promise that resolves to an array of messages.
+ * @throws {Error} If there is an error while fetching messages.
  */
 MessageModel.getMessages = async function (filters) {
   try {
@@ -106,38 +102,68 @@ MessageModel.getMessages = async function (filters) {
 MessageModel.updateMessage = async function (messageId, filters, messageData) {
   try {
     if (messageId) {
-      const updatedApp = await Message.findByIdAndUpdate(messageId, messageData).lean().exec()
-      return updatedApp
+      const updatedMessage = await Message.findByIdAndUpdate(messageId, messageData, { new: true })
+      return updatedMessage
     } else if (filters) {
-      const updatedApps = await Message.updateMany(filters).lean().exec()
-      return updatedApps
+      const updatedMessages = await Message.updateMany(filters, messageData)
+      return updatedMessages
     }
   } catch (error) {
     console.error('Error while updating message', error)
     throw new Error('Error while updating message')
   }
 }
-/**
- * Deletes a message with the given messageId.
- *
- * @param {string} messageId - The ID of the message to be deleted.
- * @param {Object} filters - Filters that can be used to select many people
- * @returns {Promise<Object>} - A promise that resolves to the deleted message.
- * @throws {Error} - If there is an error while deleting the message.
- */
-MessageModel.deleteMessage = async function (messageId, filters = {}) {
+
+MessageModel.markAsSeen = async function (sender, messageId) {
   try {
-    if (messageId) {
-      const deletedApp = await Message.findByIdAndDelete(messageId).lean().exec()
-      return deletedApp
-    } else {
-      const deletedApp = await Message.deleteMany(filters).lean().exec()
-      return deletedApp
+    const message = await Message.findById(messageId)
+    if (message) {
+      const senderRecipient = message.recipents.find(recipient => recipient.id === sender)
+      if (senderRecipient) {
+        senderRecipient.seen = true
+        await message.save()
+      }
     }
-  } catch (error) {
-    console.error('Error while deleting message', error)
-    throw new Error('Error while deleting message')
+    return message
+  } catch (err) {
+    console.error('Error updating message:', err)
+    throw new Error(err)
   }
 }
 
+MessageModel.addNewRecipents = async function (filters, recipents) {
+  try {
+    vA.validateSchema(recipents, vA.recipientSchema)
+    const message = await Message.findOneAndUpdate(filters, { $push: { recipents: { $each: recipents } } }, { new: true })
+    return message
+  } catch (error) {
+    console.error('Error while updating message', error)
+    throw new Error(error)
+  }
+}
+/**
+ * Deletes a message with the given messageId.
+ *
+ * @param {string} senderId - The ID of the sender who wants to delete the message.
+ * @param {string} messageId - The ID of the message to be deleted.
+ * @param {Object} filters - Optional filters to apply when selecting messages to delete.
+ * @returns {Promise<Object>} - A promise that resolves to the deleted message.
+ * @throws {Error} - If no message is found or the sender is not in the recipients array.
+ */
+MessageModel.deleteMessage = async function (senderId, messageId, filters = {}) {
+  try {
+    const message = await Message.findOneAndUpdate(
+      { _id: messageId, ...filters },
+      { $pull: { recipients: { id: senderId } } },
+      { new: true }
+    )
+    if (!message) {
+      throw new Error('Message not found or sender is not in the recipients array')
+    }
+    return message
+  } catch (error) {
+    console.error('Error while deleting message', error)
+    throw new Error(error)
+  }
+}
 module.exports = MessageModel

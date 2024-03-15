@@ -6,22 +6,26 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint .",
-    "fix": "eslint . --fix"
-
+    "fix": "eslint . --fix",
+    "dev": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "ajv": "^8.12.0",
     "amqplib": "^0.10.3",
     "bcrypt": "^5.1.1",
-    "mongoose": "^8.2.1"
+    "express": "^4.18.3",
+    "mongoose": "^8.2.1",
+    "socketio": "^1.0.0"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-n": "^16.6.2",
-    "eslint-plugin-promise": "^6.1.1"
+    "eslint-plugin-promise": "^6.1.1",
+    "nodemon": "^3.1.0"
   }
 }
