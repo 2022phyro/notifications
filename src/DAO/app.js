@@ -21,11 +21,11 @@ const { encryptPassword, generateSecret } = require('../../utils/encrypt')
  * @param {number} notifiLimit - The notification limit of the app.
  * @param {string} secret - The secret of the app for authentication.
  */
-function AppModel (name, email, password, notifiLimit) {
+function AppModel (name, email, password, phone) {
   this.name = name
   this.email = email
   this.password = encryptPassword(password)
-  this.notifiLimit = notifiLimit
+  this.phone = phone
   this.secret = generateSecret()
 }
 /**
@@ -37,9 +37,10 @@ function AppModel (name, email, password, notifiLimit) {
  */
 AppModel.createApp = async function (appData) {
   try {
-    const app = new App(appData)
+    const appModel = new AppModel(appData.name, appData.email, appData.password, appData.phone)
+    const app = new App(appModel)
     const savedApp = await app.save()
-    return savedApp
+    return savedApp.select('-secret')
   } catch (error) {
     console.error('Error while creating app', error)
     throw new Error('Error while creating app')
@@ -64,8 +65,7 @@ AppModel.getApp = async function (appId, filters) {
     if (filters) {
       app = await app.findOne(filters)
     }
-    const result = await app.lean().exec()
-    return result
+    return app.select('-secret')
   } catch (error) {
     console.error('Error while fetching app', error)
     throw new Error('Error while fetching app')
@@ -80,7 +80,7 @@ AppModel.getApp = async function (appId, filters) {
  */
 AppModel.getApps = async function (filters) {
   try {
-    const apps = await App.find(filters).lean().exec()
+    const apps = await App.find(filters).select('-secret').lean().exec()
     return apps
   } catch (error) {
     console.error('Error while fetching apps', error)
@@ -96,14 +96,16 @@ AppModel.getApps = async function (filters) {
  */
 AppModel.updateApp = async function (appId, appData) {
   try {
-    const updatedApp = await App.findByIdAndUpdate(appId, appData).lean().exec()
-    return updatedApp
+    if (appData.password) {
+      appData.password = encryptPassword(appData.password)
+    }
+    const updatedApp = await App.findByIdAndUpdate(appId, appData)
+    return updatedApp.select('-secret')
   } catch (error) {
     console.error('Error while updating app', error)
     throw new Error('Error while updating app')
   }
 }
-
 /**
  * Deletes an app from the database.
  *
@@ -113,7 +115,7 @@ AppModel.updateApp = async function (appId, appData) {
  */
 AppModel.deleteApp = async function (appId) {
   try {
-    const deletedApp = await App.findByIdAndDelete(appId).lean().exec()
+    const deletedApp = await App.findByIdAndDelete(appId)
     return deletedApp
   } catch (error) {
     console.error('Error while deleting app', error)

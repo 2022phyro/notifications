@@ -23,10 +23,9 @@ const appSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  notifiLimit: {
-    type: Number,
-    required: true,
-    default: 20
+  phone: {
+    type: String,
+    required: true
   }
 })
 

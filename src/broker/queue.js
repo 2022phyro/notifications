@@ -1,8 +1,4 @@
-const setupRabbitMQ = require('../../config/rabbitmq')
-
-const channel = setupRabbitMQ()
-
-async function createRabbitQueue (app) {
+async function createRabbitQueue (channel, app) {
   try {
     await channel.assertQueue(app.name)
     console.log(`Queue ${app.name} created`)
@@ -12,7 +8,7 @@ async function createRabbitQueue (app) {
   }
 }
 
-async function updateRabbitQueue (appName, newAppName) {
+async function updateRabbitQueue (channel, appName, newAppName) {
   try {
     // Create a new queue with the new name
     await channel.assertQueue(newAppName)
@@ -33,7 +29,7 @@ async function updateRabbitQueue (appName, newAppName) {
   }
 }
 
-async function deleteRabbitQueue (app) {
+async function deleteRabbitQueue (channel, app) {
   try {
     await channel.deleteQueue(app.name)
     console.log(`Queue ${app.name} deleted`)
@@ -42,30 +38,23 @@ async function deleteRabbitQueue (app) {
     throw error
   }
 }
-async function consumeMessage (app) {
+async function consumeMessage (channel, app, callback) {
   try {
-    let message
-    await channel.consume(app.name, (msg) => {
-      message = msg.content.toString()
-      channel.ack(msg)
+    channel.consume(app.name, (msg) => {
+      if (msg !== null) {
+        try {
+          callback(msg.content.toString())
+          channel.ack(msg)
+        } catch (error) {
+          console.error(`Error while processing message from queue ${app.name}`, error)
+          channel.nack(msg)
+        }
+      } else {
+        callback(new Error(`No message in queue ${app.name}`))
+      }
     }, { noAck: false })
-    return JSON.parse(message)
   } catch (error) {
     console.error(`Error while consuming message from queue ${app.name}`, error)
-    throw error
-  }
-}
-
-async function addNewRecipents () {
-  try {
-    let message
-    await channel.consume('recipents', (msg) => {
-      message = msg.content.toString()
-      channel.ack(msg)
-    }, { noAck: false })
-    return JSON.parse(message)
-  } catch (error) {
-    console.error('Error while consuming message from queue recipents', error)
     throw error
   }
 }
@@ -74,6 +63,5 @@ module.exports = {
   consumeMessage,
   createRabbitQueue,
   deleteRabbitQueue,
-  updateRabbitQueue,
-  addNewRecipents
+  updateRabbitQueue
 }

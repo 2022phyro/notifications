@@ -3,18 +3,49 @@ const Ajv = require('ajv')
 const ajv = new Ajv()
 
 const recipientSchema = {
-  type: 'array',
-  items: {
-    type: 'object',
-    properties: {
-      id: { type: 'string' },
-      seen: { type: 'boolean' }
-    },
-    required: ['id', 'seen'],
-    additionalProperties: false
-  }
 }
 
+const fcmSchema = {
+  type: 'object',
+  properties: {
+    payload: {
+      type: 'object',
+      properties: {
+        appid: { type: 'string' },
+        nType: { type: 'string' },
+        userId: { type: 'string' }
+
+      }
+    },
+    name: { type: 'string' },
+    data: { type: 'object' },
+    notification: { type: 'object' },
+    android: { type: 'object' },
+    webpush: { type: 'object' },
+    apns: { type: 'object' },
+    fcm_options: { type: 'object' },
+    token: { type: 'string' },
+    topic: { type: 'string' },
+    condition: { type: 'string' }
+  },
+  oneOf: [
+    { required: ['token'] },
+    { required: ['topic'] },
+    { required: ['condition'] }
+  ],
+  required: ['payload', 'notification', 'name']
+}
+
+const appSchema = {
+  type: 'object',
+  properties: {
+    name: { type: 'string' },
+    email: { type: 'string' },
+    password: { type: 'string' },
+    phone: { type: 'string' }
+  },
+  required: ['name', 'email', 'password', 'phone']
+}
 function validateSchema (obj, schema) {
   const validate = ajv.compile(schema)
   const valid = validate(obj)
@@ -25,5 +56,7 @@ function validateSchema (obj, schema) {
 
 module.exports = {
   recipientSchema,
+  fcmSchema,
+  appSchema,
   validateSchema
 }
