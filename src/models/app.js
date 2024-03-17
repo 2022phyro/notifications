@@ -26,6 +26,10 @@ const appSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: true
+  },
+  verified: {
+    type: Boolean,
+    default: false
   }
 })
 

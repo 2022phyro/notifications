@@ -27,6 +27,7 @@ function AppModel (name, email, password, phone) {
   this.password = encryptPassword(password)
   this.phone = phone
   this.secret = generateSecret()
+  this.verified = false
 }
 /**
  * Creates a new app.
@@ -65,7 +66,8 @@ AppModel.getApp = async function (appId, filters) {
     if (filters) {
       app = await app.findOne(filters)
     }
-    return app.select('-secret')
+    if (!app) return null
+    return app.select('-secret').toObject()
   } catch (error) {
     console.error('Error while fetching app', error)
     throw new Error('Error while fetching app')

@@ -1,5 +1,5 @@
 const broker = require('./src/broker/queue')
-const setupRabbitMQ = require('./config/rabbitmq')
+const channelPromise = require('./config/rabbitmq')
 const { saveMsgToDB } = require('./src/controllers/queue')
 const express = require('express')
 const http = require('http')
@@ -10,7 +10,7 @@ const server = http.createServer(app)
 // const io = socketIO(server)
 
 async function startConsuming () {
-  const channel = await setupRabbitMQ()
+  const channel = await channelPromise
   const apps = [
     { name: 'legos' },
     { name: 'duplo' }
@@ -18,7 +18,6 @@ async function startConsuming () {
   await Promise.all(apps.map(app => broker.consumeMessage(channel, app, saveMsgToDB)))
 }
 startConsuming().catch(console.error)
-
 
 server.listen(3000, () => {
   console.log('Socket.IO server is running on port 3000')
