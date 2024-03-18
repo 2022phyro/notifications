@@ -56,16 +56,15 @@ AppModel.createApp = async function (appData) {
  * @throws {Error} - If there is an error while fetching the app.
  */
 AppModel.getApp = async function (appId, filters) {
-  let app
+  let query = {}
   try {
     if (appId) {
-      app = await App.findById(appId)
-    } else {
-      app = App
+      query._id = appId
     }
     if (filters) {
-      app = await app.findOne(filters)
+      query = { ...query, ...filters }
     }
+    const app = await App.findOne(query)
     if (!app) return null
     return app.toObject()
   } catch (error) {

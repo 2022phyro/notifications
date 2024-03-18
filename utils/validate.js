@@ -17,23 +17,29 @@ const fcmSchema = {
 
       }
     },
-    name: { type: 'string' },
-    data: { type: 'object' },
-    notification: { type: 'object' },
-    android: { type: 'object' },
-    webpush: { type: 'object' },
-    apns: { type: 'object' },
-    fcm_options: { type: 'object' },
-    token: { type: 'string' },
-    topic: { type: 'string' },
-    condition: { type: 'string' }
+    fcmData: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        data: { type: 'object' },
+        notification: { type: 'object' },
+        android: { type: 'object' },
+        webpush: { type: 'object' },
+        apns: { type: 'object' },
+        fcm_options: { type: 'object' },
+        token: { type: 'string' },
+        topic: { type: 'string' },
+        condition: { type: 'string' }
+      },
+      oneOf: [
+        { required: ['token'] },
+        { required: ['topic'] },
+        { required: ['condition'] }
+      ],
+      required: ['notification', 'name']
+    }
   },
-  oneOf: [
-    { required: ['token'] },
-    { required: ['topic'] },
-    { required: ['condition'] }
-  ],
-  required: ['payload', 'notification', 'name']
+  required: ['payload', 'fcmData']
 }
 
 const appSchema = {
