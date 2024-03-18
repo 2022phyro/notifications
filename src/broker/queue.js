@@ -29,12 +29,12 @@ async function updateRabbitQueue (channel, appName, newAppName) {
   }
 }
 
-async function deleteRabbitQueue (channel, app) {
+async function deleteRabbitQueue (channel, appName) {
   try {
-    await channel.deleteQueue(app.name)
-    console.log(`Queue ${app.name} deleted`)
+    await channel.deleteQueue(appName)
+    console.log(`Queue ${appName} deleted`)
   } catch (error) {
-    console.error(`Error while deleting queue ${app.name}`, error)
+    console.error(`Error while deleting queue ${appName}`, error)
     throw error
   }
 }

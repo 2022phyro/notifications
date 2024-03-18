@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const App = require('../src/models/app')
+const { isBlacklisted, blacklist } = require('../src/DAO/token')
 function encryptPassword (password, saltRounds = 10) {
   try {
     const salt = bcrypt.genSaltSync(saltRounds)
@@ -33,6 +34,9 @@ function getJWTTokens (app) {
 async function refreshTokens (oldRefreshToken) {
   try {
     // Decode the old refresh token
+    if (await isBlacklisted(oldRefreshToken, 'refresh')) {
+      throw new Error('Token is blacklisted')
+    }
     const decoded = jwt.decode(oldRefreshToken)
     if (!decoded && !decoded.type === 'refresh') {
       throw new Error('Invalid refresh token')
@@ -47,12 +51,14 @@ async function refreshTokens (oldRefreshToken) {
 
     // Generate new tokens
     const newTokens = getJWTTokens(app)
+    await blacklist(oldRefreshToken, 'refresh')
 
     return newTokens
   } catch (error) {
     throw new Error('Invalid refresh token')
   }
 }
+
 module.exports = {
   encryptPassword,
   getJWTTokens,

@@ -41,7 +41,7 @@ AppModel.createApp = async function (appData) {
     const appModel = new AppModel(appData.name, appData.email, appData.password, appData.phone)
     const app = new App(appModel)
     const savedApp = await app.save()
-    return savedApp.select('-secret')
+    return savedApp
   } catch (error) {
     console.error('Error while creating app', error)
     throw new Error('Error while creating app')
@@ -67,7 +67,7 @@ AppModel.getApp = async function (appId, filters) {
       app = await app.findOne(filters)
     }
     if (!app) return null
-    return app.select('-secret').toObject()
+    return app.toObject()
   } catch (error) {
     console.error('Error while fetching app', error)
     throw new Error('Error while fetching app')
@@ -82,7 +82,7 @@ AppModel.getApp = async function (appId, filters) {
  */
 AppModel.getApps = async function (filters) {
   try {
-    const apps = await App.find(filters).select('-secret').lean().exec()
+    const apps = await App.find(filters, { password: 0, secret: 0, verified: 0, __v: 0 }).toObject()
     return apps
   } catch (error) {
     console.error('Error while fetching apps', error)
@@ -101,8 +101,12 @@ AppModel.updateApp = async function (appId, appData) {
     if (appData.password) {
       appData.password = encryptPassword(appData.password)
     }
-    const updatedApp = await App.findByIdAndUpdate(appId, appData)
-    return updatedApp.select('-secret')
+    const updatedApp = await App.findByIdAndUpdate(appId, appData, {
+      new: true, // Return the updated document
+      select: '-secret -password -__v -verified'
+    })
+    if (!updatedApp) return null
+    return updatedApp.toObject()
   } catch (error) {
     console.error('Error while updating app', error)
     throw new Error('Error while updating app')

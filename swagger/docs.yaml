@@ -1,0 +1,402 @@
+openapi: 3.1.0
+info:
+  title: Notifai
+  description: |-
+    This documentation allows one to test the different endpoints needed for managing the notifications passed through the app
+
+    Some useful links:
+    - [The Notifai repo repository](https://github.com/2022phyro/notifications)
+
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: phyrokelstein2@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: '1.0'
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: http://localhost:3000/api/v1
+tags:
+  - name: app
+    description: Managing the App Instance
+  - name: message
+    description: Managing the message objects
+  - name: user
+    description: Operations about user
+
+paths:
+  /signup:
+    post:
+      tags: [app]
+      summary: Sign up a new app
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/App'
+      responses:
+        200:
+          description: App signed up successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultSuccess'
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+  /login:
+    post:
+      tags: [app]
+      summary: Log in an app
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginBody'
+      responses:
+        200:
+          description: App logged in successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultSuccess'
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+  /logout:
+    post:
+      tags: [app]
+      security:
+        - api_key: []
+      summary: Logs out an app
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutBody'
+      responses:
+        204:
+          description: Logout successful
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+  /refresh:
+    post:
+      tags: [app]
+      summary: Refresh an app's token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshBody'
+      responses:
+        200:
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultSuccess'         
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+  /app:
+    get:
+      tags: [app]
+      security:
+        - api_key: []
+      summary: Get an app's details
+      responses:
+        200:
+          description: App details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppResponse'
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+    patch:
+      tags: [app]
+      security:
+        - api_key: []
+      summary: Update an app's details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/App'
+      responses:
+        200:
+          description: App updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppResponse'
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+    delete:
+      tags: [app]
+      security:
+        - api_key: []
+      summary: Delete an app
+      responses:
+        204:
+          description: App deleted successfully
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+
+components:
+  schemas:
+    App:
+      type: object
+      required:
+        - name
+        - email
+        - password
+        - phone
+      properties:
+        name:
+          type: string
+          description: The name of the app
+          examples:
+            - duplo
+        email:
+          type: string
+          format: email
+          description: The email of the app
+          examples:
+            - app@a.com
+        password:
+          type: string
+          format: password
+          description: The password of the app
+          examples:
+            - pwd123
+        phone:
+          type: string
+          description: The phone number of the app
+          examples:
+            - '+123 234567890'
+    AppUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the app
+          examples:
+            - duplo
+        email:
+          type: string
+          format: email
+          description: The email of the app
+          examples:
+            - app@a.com
+        password:
+          type: string
+          format: password
+          description: The password of the app
+          examples:
+            - pwd123
+        phone:
+          type: string
+          description: The phone number of the app
+          examples:
+            - '+123 234567890'
+    
+    RefreshBody:
+      type: object
+      required:
+        - refresh
+      properties:
+        refresh:
+          type: string
+          description: The refresh token
+          examples:
+            - eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+    LogoutBody:
+      type: object
+      required:
+        - refresh
+      properties:
+        refresh:
+          type: string
+          description: The refresh token
+          examples:
+            - eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        all:
+          type: boolean
+          description: Logout from all devices
+          examples:
+            false
+    LoginBody:
+      type: object
+      required:
+        - name
+        - password
+      properties:
+        name:
+          type: string
+          description: The name of the app
+          examples:
+            - duplo
+        password:
+          type: string
+          format: password
+          description: The password of the app
+          examples: 
+            - pwd123
+    DefaultError:
+      type: object
+      required:
+        - status
+        - message
+        - errors
+        - data
+      properties:
+        status:
+          type: number
+          description: Status code
+          examples:
+            - 400
+        message:
+          type: string
+          description: Error message
+          examples: 
+            - 'Bad Request'
+        errors:
+          type: object
+          description: Object of error messages
+          examples:
+            - auth: [Invalid token]
+        data:
+          type: object
+          description: Empty
+          examples:
+            - {}
+        
+    DefaultSuccess:
+      type: object
+      required:
+        - status
+        - message
+        - errors
+        - data
+      properties:
+        status:
+          type: number
+          description: Status code
+          examples:
+            - 200
+        message:
+          type: string
+          description: Resposne message
+          examples: 
+            - 'Response Successful'
+        errors:
+          type: object
+          description: Empty
+          examples:
+            - {}
+        data:
+          type: object
+          description: Object of data returned
+          examples:
+            - {}
+    AppResponse:
+      type: object
+      required:
+        - status
+        - message
+        - errors
+        - data
+      properties:
+        status:
+          type: number
+          description: Status code
+          examples:
+            - 200
+        message:
+          type: string
+          description: Resposne message
+          examples: 
+            - 'Response Successful'
+        errors:
+          type: object
+          description: Empty
+          examples:
+            - {}
+        data:
+          type: object
+          description: The app data
+          required:
+            - _id
+            - name
+            - email
+            - phone
+            - created
+          properties:
+            _id:
+              type: string
+              description: The ID of the app
+              examples:
+                - '60d2ee9f292a3e2d8c3656f2'
+            name:
+              type: string
+              description: The name of the app
+              examples:
+                - 'My App'
+            email:
+              type: string
+              format: email
+              description: The email of the app
+              examples:
+                - 'myapp@example.com'
+            phone:
+              type: string
+              description: The phone number of the app
+              examples:
+                - '+123 234567890'
+            created:
+              type: string
+              format: date-time
+              description: The creation date of the app
+              examples:
+                - '2021-06-23T09:30:00Z'
+      
+    
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: Authorization
+      in: header

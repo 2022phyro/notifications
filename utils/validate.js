@@ -40,7 +40,7 @@ const appSchema = {
   type: 'object',
   properties: {
     name: { type: 'string' },
-    email: { type: 'string', format: 'email' },
+    email: { type: 'string' },
     password: { type: 'string' },
     phone: { type: 'string', maxLength: 20 }
   },
@@ -51,7 +51,7 @@ const appUpdateSchema = {
   type: 'object',
   properties: {
     name: { type: 'string', minLength: 3, maxLength: 10 },
-    email: { type: 'string', format: 'email' },
+    email: { type: 'string' },
     password: { type: 'string', minLength: 5 },
     phone: { type: 'string', maxLength: 20 }
     // Add other fields as needed
@@ -71,8 +71,8 @@ function validateName (name) {
   if (typeof name !== 'string') {
     errors.push('Must be a string')
   }
-  if (name.length < 3 || name.length > 10) {
-    errors.push('App name should be between 3 and 10 characters')
+  if (name.length < 3 || name.length > 20) {
+    errors.push('App name should be between 3 and 20 characters')
   }
   if (!/^[a-zA-Z0-9_]+$/.test(name)) {
     errors.push('App name must contain only letters, underscores, and numbers')
@@ -80,7 +80,7 @@ function validateName (name) {
   if (!/^[a-zA-Z]/.test(name)) {
     errors.push('App name must start with a letter')
   }
-  return [errors.length > 0, errors]
+  return [errors.length === 0, errors]
 }
 
 function validatePwd (password) {
@@ -96,7 +96,7 @@ function validatePwd (password) {
   if (password.length < 5) {
     errors.push('Password should be at least 5 characters')
   }
-  return [errors.length > 0, errors]
+  return [errors.length === 0, errors]
 }
 function validateEmail (email) {
   // Regular expression for basic email validation

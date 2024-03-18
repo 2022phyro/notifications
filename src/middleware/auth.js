@@ -1,12 +1,18 @@
 const jwt = require('jsonwebtoken')
 const AppService = require('../service/app')
+const TokenDAO = require('../DAO/token')
+const { getErrorResponse } = require('../../utils/response')
+
 async function authenticateJWT (req, res, next) {
   const authHeader = req.headers.authorization
   if (authHeader) {
     const [bearer, token] = authHeader.split(' ')
     const accepted = process.env.BEARER.split(',')
     if (!accepted.includes(bearer) && !token) {
-      return res.status(401).json({ message: 'Authentication failed: Invalid token type' })
+      return res.status(401).json(getErrorResponse(401, 'Authentication failed', { auth: ['Invalid token'] }))
+    }
+    if (await TokenDAO.isBlacklisted(token, 'access')) {
+      return res.status(401).json(getErrorResponse(401, 'Authentication failed', { auth: ['Token is blacklisted'] }))
     }
     try {
       // Decode the token to get the payload without verifying
@@ -15,19 +21,22 @@ async function authenticateJWT (req, res, next) {
       // Get the app
       const app = await AppService.getApp(decoded.sub)
       if (!app) {
-        return res.status(401).json({ message: 'Authentication failed: App not found' })
+        return res.status(401).json(getErrorResponse(401, 'Authentication failed', { auth: ['App not found'] }))
       }
       // Verify the token with the app's secret
       jwt.verify(token, app.secret, { algorithms: ['HS256'] })
       // Add the app to the request
       req.app = app
+      req.token = token
       next()
     } catch (error) {
-      return res.status(401).json({ message: 'Authentication failed: Invalid token' })
+      return res.status(401).json(getErrorResponse(401, 'Authentication failed', { auth: ['Invalid token'] }))
     }
   } else {
-    return res.status(401).json({ message: 'Authentication failed: No token provided' })
+    return res.status(401).json(getErrorResponse(401, 'Authentication failed', { auth: ['No token provided'] }))
   }
 }
 
-module.exports = authenticateJWT
+module.exports = {
+  authenticateJWT
+}
