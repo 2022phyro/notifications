@@ -45,7 +45,7 @@ MessageModel.getMessages = async function (appId, filters = {}, page = 1, limit 
       .limit(limit)
       .lean()
       .exec()
-    return [page - 1, messages, page + 1]
+    return [page > 1 ? page - 1 : null, messages, messages.length === limit ? page + 1 : null]
   } catch (error) {
     console.error('Error while getting messages', error)
     throw error
