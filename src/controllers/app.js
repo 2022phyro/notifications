@@ -17,7 +17,7 @@ async function signup (req, res) {
     }
 
     const app = await AppService.newApp(appData)
-    const channel = await channelPromise
+    const { channel } = await channelPromise
     await createRabbitQueue(channel, app)
     const tokens = getJWTTokens(app)
     const data = {
@@ -124,7 +124,7 @@ async function patchApp (req, res) {
     }
 
     const updatedApp = await AppService.updateApp(app._id, updates)
-    const channel = await channelPromise
+    const { channel } = await channelPromise
     await updateRabbitQueue(channel, app.name, updatedApp.name)
     res.status(200).json(rP.getResponse(200, 'App updated successfully', updatedApp))
   } catch (error) {
@@ -139,7 +139,7 @@ async function deleteApp (req, res) {
     const app = req.app
     const appName = app.name
     await AppService.deleteApp(app._id)
-    const channel = await channelPromise
+    const { channel } = await channelPromise
     await deleteRabbitQueue(channel, appName)
     res.status(204).json()
   } catch (error) {

@@ -1,6 +1,7 @@
 const amqp = require('amqplib')
 
 let channel = null
+let confirmChannel = null
 const url = 'amqp://localhost'
 
 const channelPromise = new Promise((resolve, reject) => {
@@ -8,6 +9,7 @@ const channelPromise = new Promise((resolve, reject) => {
     try {
       const connection = await amqp.connect(url)
       channel = await connection.createChannel()
+      confirmChannel = await connection.createConfirmChannel()
 
       console.log('Connected to RabbitMQ')
 
@@ -16,7 +18,7 @@ const channelPromise = new Promise((resolve, reject) => {
         setTimeout(connect, 1000)
       })
 
-      resolve(channel)
+      resolve({ channel, confirmChannel })
     } catch (error) {
       console.error('Error while setting up RabbitMQ', error)
       console.log('Retrying in 5 seconds...')
@@ -26,5 +28,6 @@ const channelPromise = new Promise((resolve, reject) => {
 
   connect()
 })
+
 
 module.exports = channelPromise

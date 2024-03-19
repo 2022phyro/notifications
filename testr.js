@@ -21,18 +21,19 @@ async function broadcastMessages (appNames) {
 
     const appName = getRandomAppName(appNames)
     const message = {
-      name: appName,
       payload: {
-        appid: 'your-app-id',
+        appId: '65f82af5ffac2ba844579770',
         nType: 'fcm',
         userId: 'your-user-id'
       },
-      notification: {
-        title: 'Sample title',
-        body: getRandomText()
-      },
-      token: 'jdfcfufsjdgskgfkghagyy2t7'
-      // Add other properties as needed
+      fcmData: {
+        notification: {
+          title: 'Sample title',
+          body: getRandomText()
+        },
+        token: 'jdfcfufsjdgskgfkghagyy2t7',
+        name: 'poeticverse'
+      }
     }
 
     await channel.assertQueue(appName, { durable: true })
@@ -51,7 +52,7 @@ async function broadcastMessages (appNames) {
 }
 
 // Usage:
-const appNames = ['legos', 'duplo']
+const appNames = ['poeticverse']
 for (let i = 0; i < 10; i++) {
   broadcastMessages(appNames)
 }

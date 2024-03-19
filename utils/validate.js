@@ -56,7 +56,7 @@ const appSchema = {
 const appUpdateSchema = {
   type: 'object',
   properties: {
-    name: { type: 'string', minLength: 3, maxLength: 10 },
+    name: { type: 'string', minLength: 3 },
     email: { type: 'string' },
     password: { type: 'string', minLength: 5 },
     phone: { type: 'string', maxLength: 20 }

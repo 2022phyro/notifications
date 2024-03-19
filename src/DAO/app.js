@@ -81,7 +81,7 @@ AppModel.getApp = async function (appId, filters) {
  */
 AppModel.getApps = async function (filters) {
   try {
-    const apps = await App.find(filters, { password: 0, secret: 0, verified: 0, __v: 0 }).toObject()
+    const apps = await App.find(filters, { password: 0, secret: 0, verified: 0, __v: 0 }).lean().exec()
     return apps
   } catch (error) {
     console.error('Error while fetching apps', error)

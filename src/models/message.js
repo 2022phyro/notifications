@@ -28,7 +28,7 @@ const messageSchema = new mongoose.Schema({
     default: 'PENDING'
   },
   value: {
-    type: String,
+    type: Object,
     required: true
   }
 })

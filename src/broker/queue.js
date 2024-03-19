@@ -15,8 +15,10 @@ async function updateRabbitQueue (channel, appName, newAppName) {
 
     // Move messages from the old queue to the new one
     await channel.consume(appName, (msg) => {
-      channel.sendToQueue(newAppName, msg.content)
-      channel.ack(msg)
+      if (msg !== null) {
+        channel.sendToQueue(newAppName, msg.content)
+        channel.ack(msg)
+      }
     }, { noAck: false })
 
     // Delete the old queue
@@ -43,8 +45,8 @@ async function consumeMessage (channel, app, callback) {
     channel.consume(app.name, (msg) => {
       if (msg !== null) {
         try {
-          callback(msg.content.toString())
           channel.ack(msg)
+          callback(msg.content.toString())
         } catch (error) {
           console.error(`Error while processing message from queue ${app.name}`, error)
           channel.nack(msg)
@@ -59,9 +61,26 @@ async function consumeMessage (channel, app, callback) {
   }
 }
 
+async function sendToQueue (channel, queue, message) {
+  try {
+    let success = true
+    let error
+    channel.assertQueue(queue, {durable: true})
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)), { persistent: true }, (err) => {
+      if (err) {
+        success = false
+        error = err.message
+      }
+    })
+    return [success, error]
+  } catch (error) {
+    return [false, error.message]
+  }
+}
 module.exports = {
   consumeMessage,
   createRabbitQueue,
   deleteRabbitQueue,
-  updateRabbitQueue
+  updateRabbitQueue,
+  sendToQueue
 }
