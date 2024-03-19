@@ -37,40 +37,55 @@ MessageModel.getMessage = async function (msgId, filters) {
   }
 }
 
-MessageModel.getMessages = async function (appId, filters = {}, page = 1, limit = 30) {
+MessageModel.getMessages = async function (appId, page = 1, limit = 30, filters = {}) {
   try {
     const query = { ...filters, appId }
-    const messages = await Message.find(query)
+    const messages = await Message.find(query, { __v: 0, value: 0 })
       .skip((page - 1) * limit)
       .limit(limit)
       .lean()
       .exec()
-    return [page > 1 ? page - 1 : null, messages, messages.length === limit ? page + 1 : null]
+    return { prev: page > 1 ? page - 1 : null, messages, next: messages.length === limit ? page + 1 : null }
   } catch (error) {
     console.error('Error while getting messages', error)
     throw error
   }
 }
 
-MessageModel.updateMessage = async function (msgId, msgData) {
+MessageModel.updateMessage = async function (msgId, filters = {}, msgData) {
   try {
-    const updatedMsg = await Message.findByIdAndUpdate(msgId, msgData)
+    const updatedMsg = await Message.findOneAndUpdate({ _id: msgId, ...filters }, msgData, { new: true })
     if (!updatedMsg) return null
-    return updatedMsg.toObject()
+    return updatedMsg.select('value').select('__v').toObject()
   } catch (error) {
     console.error('Error while updating the message', error)
     throw error
   }
 }
 
-MessageModel.deleteMessage = async function (msgId) {
+MessageModel.deleteMessage = async function (appId, msgId) {
   try {
-    const deletedMsg = await Message.findByIdAndDelete(msgId)
-    return deletedMsg
+    const deletedMsg = await Message.findById(msgId)
+    if (!deletedMsg) return 'not found'
+    if (deletedMsg.appId !== appId) return 'denied'
+    await deletedMsg.remove()
+    return 'done'
   } catch (error) {
     console.error('Error deleting the app', error)
     throw error
   }
 }
-
+MessageModel.deleteMessages = async function (appId, filters) {
+  try {
+    if (!filters || Object.keys(filters).length === 0) {
+      throw new Error('Filters must not be empty')
+    }
+    const query = { ...filters, appId }
+    const deletedMessages = await Message.deleteMany(query)
+    return deletedMessages.deletedCount
+  } catch (error) {
+    console.error('Error deleting messages', error)
+    throw error
+  }
+}
 module.exports = MessageModel

@@ -12,7 +12,7 @@ async function getMessage (msgId, filters) {
 }
 
 async function getMessages (appId, filters, page, limit) {
-  return await MessageModel.getMessages(appId, filters, page, limit)
+  return await MessageModel.getMessages(appId, page, limit, filters)
 }
 
 async function updateMessage (msgId, msgData) {
@@ -23,10 +23,14 @@ async function deleteMessage (msgId) {
   return await MessageModel.deleteMessage(msgId)
 }
 
+async function deleteAllMessages (appId, filters) {
+  return await MessageModel.deleteAllMessages(appId, filters)
+}
 module.exports = {
   newMessage,
   getMessage,
   getMessages,
   updateMessage,
-  deleteMessage
+  deleteMessage,
+  deleteAllMessages
 }

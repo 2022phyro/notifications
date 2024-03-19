@@ -65,7 +65,7 @@ async function sendToQueue (channel, queue, message) {
   try {
     let success = true
     let error
-    channel.assertQueue(queue, {durable: true})
+    channel.assertQueue(queue, { durable: true })
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)), { persistent: true }, (err) => {
       if (err) {
         success = false

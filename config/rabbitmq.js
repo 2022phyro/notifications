@@ -29,5 +29,4 @@ const channelPromise = new Promise((resolve, reject) => {
   connect()
 })
 
-
 module.exports = channelPromise

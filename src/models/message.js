@@ -30,6 +30,10 @@ const messageSchema = new mongoose.Schema({
   value: {
     type: Object,
     required: true
+  },
+  retries: {
+    type: Number,
+    default: 0
   }
 })
 

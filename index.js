@@ -1,25 +1,23 @@
-const broker = require('./src/broker/queue')
-const channelPromise = require('./config/rabbitmq')
 const mongoDB = require('./config/db')
 const { startConsuming } = require('./src/controllers/queue')
 const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
 const morgan = require('morgan')
-const rateLimit = require('express-rate-limit');
+const rateLimit = require('express-rate-limit')
 const swaggerUi = require('swagger-ui-express')
 const YAML = require('js-yaml')
 const fs = require('fs')
 const AppRouter = require('./src/routes/app')
+const MessageRouter = require('./src/routes/message')
 require('dotenv').config({ path: './config.env' })
-
 
 // ...
 
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 200 // limit each IP to 200 requests per windowMs
-});
+})
 
 //  apply to all requests
 const swaggerDocument = YAML.load(fs.readFileSync('./swagger/docs.yaml', 'utf8'))
@@ -32,8 +30,8 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cors())
 app.use(helmet())
 
-// Routes
 app.use('/api/v1', AppRouter)
+app.use('/api/v1', MessageRouter)
 app.use('/api/v1/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 app.use((err, req, res, next) => {
