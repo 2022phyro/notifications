@@ -11,12 +11,12 @@ async function getMessage (msgId, filters) {
   return await MessageModel.getMessage(msgId, filters)
 }
 
-async function getMessages (appId, filters, page, limit) {
+async function getMessages (appId, page, limit, filters) {
   return await MessageModel.getMessages(appId, page, limit, filters)
 }
 
-async function updateMessage (msgId, msgData) {
-  return await MessageModel.updateMessage(msgId, msgData)
+async function updateMessage (msgId, msgData, filters) {
+  return await MessageModel.updateMessage(msgId, msgData, filters)
 }
 
 async function deleteMessage (msgId) {

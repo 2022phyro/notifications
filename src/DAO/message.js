@@ -40,23 +40,25 @@ MessageModel.getMessage = async function (msgId, filters) {
 MessageModel.getMessages = async function (appId, page = 1, limit = 30, filters = {}) {
   try {
     const query = { ...filters, appId }
+    console.log(page, limit)
     const messages = await Message.find(query, { __v: 0, value: 0 })
       .skip((page - 1) * limit)
       .limit(limit)
       .lean()
       .exec()
-    return { prev: page > 1 ? page - 1 : null, messages, next: messages.length === limit ? page + 1 : null }
+    const count = messages.length
+    return { prev: page > 1 ? page - 1 : null, messages, next: count === limit ? page + 1 : null, count }
   } catch (error) {
     console.error('Error while getting messages', error)
     throw error
   }
 }
 
-MessageModel.updateMessage = async function (msgId, filters = {}, msgData) {
+MessageModel.updateMessage = async function (msgId, msgData, filters = {}) {
   try {
     const updatedMsg = await Message.findOneAndUpdate({ _id: msgId, ...filters }, msgData, { new: true })
     if (!updatedMsg) return null
-    return updatedMsg.select('value').select('__v').toObject()
+    return updatedMsg.lean()
   } catch (error) {
     console.error('Error while updating the message', error)
     throw error

@@ -10,9 +10,11 @@ const YAML = require('js-yaml')
 const fs = require('fs')
 const AppRouter = require('./src/routes/app')
 const MessageRouter = require('./src/routes/message')
+const expressPino = require('pino-http')
+const { serverLogger } = require('./utils/logger')
 require('dotenv').config({ path: './config.env' })
+const morganMiddleware = require('./src/middleware/logs')
 
-// ...
 
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -21,10 +23,13 @@ const limiter = rateLimit({
 
 //  apply to all requests
 const swaggerDocument = YAML.load(fs.readFileSync('./swagger/docs.yaml', 'utf8'))
+const expressLogger = expressPino({ logger: serverLogger })
+
 const app = express()
 app.set('trust proxy', 1)
 app.use(limiter)
-app.use(morgan('dev'))
+// app.use(expressLogger)
+app.use(morganMiddleware)
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cors())
@@ -40,7 +45,7 @@ app.use((err, req, res, next) => {
 })
 mongoDB()
 app.listen(3000, () => {
-  console.log('Express server is running on port 3000')
+  serverLogger.info('Express server is running on port 3000')
 })
 
 startConsuming().catch(console.error)

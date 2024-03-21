@@ -40,23 +40,23 @@ async function deleteRabbitQueue (channel, appName) {
     throw error
   }
 }
-async function consumeMessage (channel, app, callback) {
+async function consumeMessage (channel, appName, callback) {
   try {
-    channel.consume(app.name, (msg) => {
+    channel.consume(appName, (msg) => {
       if (msg !== null) {
         try {
           channel.ack(msg)
           callback(msg.content.toString())
         } catch (error) {
-          console.error(`Error while processing message from queue ${app.name}`, error)
+          console.error(`Error while processing message from queue ${appName}`, error)
           channel.nack(msg)
         }
       } else {
-        callback(new Error(`No message in queue ${app.name}`))
+        callback(new Error(`No message in queue ${appName}`))
       }
     }, { noAck: false })
   } catch (error) {
-    console.error(`Error while consuming message from queue ${app.name}`, error)
+    console.error(`Error while consuming message from queue ${appName}`, error)
     throw error
   }
 }

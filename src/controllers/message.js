@@ -10,6 +10,9 @@ async function getMessages (req, res) {
     page = parseInt(page) || 1
     limit = parseInt(limit) || 30
 
+    console.log(limit)
+    console.log(filters)
+
     const data = await MsgService.getMessages(app._id, page, limit, filters)
     res.status(200).json(rP.getResponse(200, 'Messages retrieved successfully', data))
   } catch (error) {
@@ -64,7 +67,9 @@ async function markAsRead (req, res) {
   try {
     const app = req.app
     const { id } = req.params
-    const success = await MsgService.updateMessage(id, { appId: app._id }, { read: true })
+    const success = await MsgService.updateMessage(id, { read: true }, { appId: app._id })
+    delete success.value
+    delete success.__v
     if (!success) {
       return res.status(404).json(rP.getErrorResponse(404, 'Message not found', { markRead: ['The message you are trying to update does not exist'] }))
     } else {
