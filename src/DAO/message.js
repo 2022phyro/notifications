@@ -58,7 +58,7 @@ MessageModel.updateMessage = async function (msgId, msgData, filters = {}) {
   try {
     const updatedMsg = await Message.findOneAndUpdate({ _id: msgId, ...filters }, msgData, { new: true })
     if (!updatedMsg) return null
-    return updatedMsg.lean()
+    return updatedMsg
   } catch (error) {
     console.error('Error while updating the message', error)
     throw error

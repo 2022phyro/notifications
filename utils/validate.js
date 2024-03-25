@@ -68,7 +68,7 @@ function validateSchema (obj, schema) {
   const validate = ajv.compile(schema)
   const valid = validate(obj)
   if (!valid) {
-    throw new Error('Invalid: ' + ajv.errorsText(validate.errors))
+    throw new Error('Validation failed: ' + ajv.errorsText(validate.errors))
   }
 }
 

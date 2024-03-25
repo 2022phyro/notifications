@@ -2,12 +2,21 @@
     "env": {
         "browser": true,
         "commonjs": true,
-        "es2021": true
+        "es2021": true,
+        "mocha": true
     },
     "extends": "standard",
     "parserOptions": {
         "ecmaVersion": "latest"
     },
     "rules": {
-    }
+    },
+    "overrides": [
+        {
+          "files": ["**/*.test.js"],
+          "rules": {
+            "no-unused-expressions": "off"
+          }
+        }
+      ]
 }

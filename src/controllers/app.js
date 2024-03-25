@@ -5,31 +5,79 @@ const vD = require('../../utils/validate')
 const rP = require('../../utils/response')
 const { createRabbitQueue, updateRabbitQueue, deleteRabbitQueue } = require('../broker/queue')
 const channelPromise = require('../../config/rabbitmq')
-
+const { dbLogger, queueLogger } = require('../../utils/logger')
+/**
+ * Registers a new app.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise} - A promise that resolves to the response object.
+ *
+ * @throws {Error} - If the app registration fails.
+ * @throws {Error} - If the app name already exists.
+ * @throws {Error} - If the app data validation fails.
+ * @throws {Error} - If there is an internal server error.
+ */
 async function signup (req, res) {
   try {
     const appData = req.body
+
+    // Validate the app data against the app schema
     vD.validateSchema(appData, vD.appSchema)
 
-    const [stat, err] = vD.validateApp(appData)
-    if (!stat) {
-      return res.status(400).json(rP.getErrorResponse(400, 'App registration failed', err))
+    // Validate the app data
+    const [isValid, validationErrors] = vD.validateApp(appData)
+    if (!isValid) {
+      return res
+        .status(400)
+        .json(rP.getErrorResponse(400, 'App registration failed', validationErrors))
     }
 
+    // Create a new app in the database
     const app = await AppService.newApp(appData)
+
+    // Get the RabbitMQ channel from the channelPromise
     const { channel } = await channelPromise
+
+    // Create a RabbitMQ queue for the app
     await createRabbitQueue(channel, app)
+
+    // Generate JWT tokens for the app
     const tokens = getJWTTokens(app)
+
+    // Prepare the response data
     const data = {
       tokens,
       appId: app._id,
       name: app.name
     }
-    res.status(201).json(rP.getResponse(201, 'App successfully registered', data))
+
+    // Return a 201 response with the registration success message and the response data
+    return res
+      .status(201)
+      .json(rP.getResponse(201, 'App successfully registered', data))
   } catch (error) {
-    res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {
-      signup: [error.message]
-    }))
+    if ([11000, 11001].includes(error.code)) {
+      return res
+        .status(400)
+        .json(rP.getErrorResponse(400, 'App registration failed', {
+          signup: ['App with that name already exists']
+        }))
+    } else if (error.message.startsWith('Validation failed:')) {
+      return res
+        .status(400)
+        .json(rP.getErrorResponse(400, 'App registration failed', {
+          signup: [error.message.split(': ')[1]]
+        }))
+    }
+
+    dbLogger.error(error.message, error)
+
+    return res
+      .status(400)
+      .json(rP.getErrorResponse(500, 'Internal Server Error', {
+        signup: [error.message]
+      }))
   }
 }
 
@@ -53,7 +101,6 @@ async function login (req, res) {
       return res.status(400).json(rP.getErrorResponse(400, 'App login failed', errors))
     }
     const app = await AppService.getApp(undefined, { name })
-    console.log(app)
     if (!app) {
       return res.status(404).json(rP.getErrorResponse(404, 'App not found', { lookup: [`App ${name} not found`] }))
     }
@@ -68,9 +115,14 @@ async function login (req, res) {
     }
     res.status(200).json(rP.getResponse(200, 'App login successful', data))
   } catch (error) {
-    console.error(error)
+    if (error.message.endsWith('not found')) {
+      return res.status(404).json(rP.getErrorResponse(400, 'App login failed', {
+        signup: [error.message]
+      }))
+    }
+    dbLogger.error(error.message, error)
     res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {
-      login: [error.message]
+      signup: [error.message]
     }))
   }
 }
@@ -78,19 +130,25 @@ async function login (req, res) {
 async function logout (req, res) {
   try {
     const { refresh, all } = req.body
+    if (!(refresh || (refresh && all))) {
+      return res.status(400).json(rP.getErrorResponse(400, 'Logout failed', {
+        logout: ['Must provide refresh token and all']
+      }))
+    }
     if (await TokenDAO.isBlacklisted(refresh, 'refresh')) {
       return res.status(400).json(rP.getErrorResponse(400, 'Logout failed', {
         logout: ['Token is blacklisted']
       }))
     }
-    if (all === true) {
+    if (all) {
       await AppService.updateApp(req.app._id, { secret: generateSecret() })
     } else {
-      await TokenDAO.blacklist(refresh, 'refresh')
-      await TokenDAO.blacklist(req.token, 'access')
+      await TokenDAO.blacklist(req.app._id, refresh, 'refresh')
+      await TokenDAO.blacklist(req.app._id, req.token, 'access')
     }
     res.status(204).json()
   } catch (error) {
+    dbLogger.error(error.message, error)
     res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {
       logout: [error.message]
     }))
@@ -106,6 +164,12 @@ async function getApp (req, res) {
     delete app.verified
     res.status(200).json(rP.getResponse(200, 'App retrieved successfully', app))
   } catch (error) {
+    if (error.message.endsWith('not found')) {
+      return res.status(404).json(rP.getErrorResponse(400, 'App registration failed', {
+        signup: [error.message]
+      }))
+    }
+    dbLogger.error(error.message, error)
     res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {
       lookup: [error.message]
     }))
@@ -128,6 +192,24 @@ async function patchApp (req, res) {
     await updateRabbitQueue(channel, app.name, updatedApp.name)
     res.status(200).json(rP.getResponse(200, 'App updated successfully', updatedApp))
   } catch (error) {
+    if ([11000, 11001].includes(error.code)) {
+      return res.status(400).json(rP.getErrorResponse(400, 'App registration failed', {
+        signup: ['That name is already taken. Please choose another']
+      }))
+    } else if (error.message.startsWith('Validation failed:')) {
+      return res.status(400).json(rP.getErrorResponse(400, 'App registration failed', {
+        signup: [error.message.split(': ')[1]]
+      }))
+    }
+    if (error.startsWith('QueueError')) {
+      queueLogger.error(error.message, error)
+    }
+    if (error.message.endsWith('not found')) {
+      return res.status(404).json(rP.getErrorResponse(400, 'App registration failed', {
+        signup: [error.message]
+      }))
+    }
+    dbLogger.error(error.message, error)
     res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {
       update: [error.message]
     }))
@@ -143,6 +225,15 @@ async function deleteApp (req, res) {
     await deleteRabbitQueue(channel, appName)
     res.status(204).json()
   } catch (error) {
+    if (error.startsWith('QueueError')) {
+      queueLogger.error(error.message, error)
+    }
+    if (error.message.endsWith('not found')) {
+      return res.status(404).json(rP.getErrorResponse(400, 'App registration failed', {
+        signup: [error.message]
+      }))
+    }
+    dbLogger.error(error.message, error)
     res.status(500).json(rP.getErrorResponse(500, 'Internal Server Error', {
       delete: [error.message]
     }))
@@ -155,7 +246,7 @@ async function refreshToken (req, res) {
     const tokens = refreshTokens(refresh)
     res.status(200).json(rP.getResponse(200, 'Refresh token generated', tokens))
   } catch (error) {
-    res.status(400).json(rP.getErrorResponse(500, 'Error refreshing token'), {
+    res.status(400).json(rP.getErrorResponse(400, 'Error refreshing token'), {
       refresh: [error.message]
     })
   }

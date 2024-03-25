@@ -3,7 +3,7 @@ async function createRabbitQueue (channel, app) {
     await channel.assertQueue(app.name)
     console.log(`Queue ${app.name} created`)
   } catch (error) {
-    console.error(`Error while creating queue ${app.name}`, error)
+    error.message = 'QueueError: ' + error.message
     throw error
   }
 }
@@ -27,6 +27,7 @@ async function updateRabbitQueue (channel, appName, newAppName) {
     console.log(`Queue ${appName} updated to ${newAppName}`)
   } catch (error) {
     console.error(`Error while updating queue ${appName}`, error)
+    error.message = 'QueueError: ' + error.message
     throw error
   }
 }
@@ -36,7 +37,7 @@ async function deleteRabbitQueue (channel, appName) {
     await channel.deleteQueue(appName)
     console.log(`Queue ${appName} deleted`)
   } catch (error) {
-    console.error(`Error while deleting queue ${appName}`, error)
+    error.message = 'QueueError: ' + error.message
     throw error
   }
 }
@@ -48,7 +49,8 @@ async function consumeMessage (channel, appName, callback) {
           channel.ack(msg)
           callback(msg.content.toString())
         } catch (error) {
-          console.error(`Error while processing message from queue ${appName}`, error)
+          error.message = 'QueueError: ' + error.message
+          // throw error
           channel.nack(msg)
         }
       } else {
@@ -56,7 +58,7 @@ async function consumeMessage (channel, appName, callback) {
       }
     }, { noAck: false })
   } catch (error) {
-    console.error(`Error while consuming message from queue ${appName}`, error)
+    error.message = 'QueueError: ' + error.message
     throw error
   }
 }

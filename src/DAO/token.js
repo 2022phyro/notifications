@@ -1,11 +1,11 @@
 const { BLAccessToken, BLRefreshToken } = require('../models/token')
-async function blacklist (token, type) {
+async function blacklist (appId, token, type) {
   try {
     if (type === 'access') {
-      const newAccessToken = new BLAccessToken({ token })
+      const newAccessToken = new BLAccessToken({ token, appId })
       await newAccessToken.save()
     } else if (type === 'refresh') {
-      const newRefreshToken = new BLRefreshToken({ token })
+      const newRefreshToken = new BLRefreshToken({ token, appId })
       await newRefreshToken.save()
     } else {
       throw new Error('Invalid token type')

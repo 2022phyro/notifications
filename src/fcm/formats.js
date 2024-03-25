@@ -1,22 +1,63 @@
-const admin = require('./config')
-// const Anc = require('firebase-admin')
-const MessageService = require('../service/message')
-function sendMessage (message) {
-  const msgId = message._id
-  delete message._id
-  message.data = { _id: msgId, ...message.data }
-  admin.messaging().send(message)
-    .then(() => {
-      MessageService.update(msgId, { status: 'SUCCESS' })
-      console.log(`[INFO] - fcm - Message with id ${msgId} sent successfully`)
-    })
-    .catch((error) => {
-      MessageService.update(msgId, { status: 'FAILURE', error: error.message })
-      // Reschedule the message to be sent
-      console.log(`[INFO] - fcm - Message with id ${msgId} failed sending. Resheduling...`)
-    })
+function configureAndroid (defaults) {
+  defaults = defaults || {}
+  return {
+    android: {
+      priority: 'high',
+      notification: {
+        sound: 'default',
+        ...defaults
+      }
+    }
+  }
+}
+
+function configureWebPush (defaults) {
+  defaults = defaults || {}
+  return {
+    webpush: {
+      headers: {
+        Urgency: 'high'
+      },
+      notification: {
+        ...defaults
+      }
+    }
+  }
+}
+
+function configureApns (defaults) {
+  defaults = defaults || {}
+  return {
+    apns: {
+      headers: {
+        'apns-priority': '10'
+      },
+      payload: {
+        aps: {
+          sound: 'default',
+          ...defaults
+        }
+      }
+    }
+  }
+}
+
+function buildMessage (data) {
+  const message = {
+    ...(data.name && { name: data.name }),
+    ...(data.data && { data: data.data }),
+    ...(data.notification && { notification: data.notification }),
+    ...configureAndroid(data.android),
+    ...configureWebPush(data.webpush),
+    ...configureApns(data.apns),
+    ...(data.fcm_options && { fcm_options: data.fcm_options }),
+    ...(data.token && { token: data.token }),
+    ...(data.topic && { topic: data.topic }),
+    ...(data.condition && { condition: data.condition })
+  }
+  return message
 }
 
 module.exports = {
-  sendMessage
+  buildMessage
 }

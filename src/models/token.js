@@ -5,6 +5,11 @@ const BLAccessTokenSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  appId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'App',
+    required: true
+  },
   created: {
     type: Date,
     default: Date.now,
@@ -15,6 +20,11 @@ const BLAccessTokenSchema = new mongoose.Schema({
 const BLRefreshTokenSchema = new mongoose.Schema({
   token: {
     type: String,
+    required: true
+  },
+  appId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'App',
     required: true
   },
   created: {

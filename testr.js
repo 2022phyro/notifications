@@ -31,7 +31,7 @@ async function broadcastMessages (appNames) {
           title: 'Sample title',
           body: getRandomText()
         },
-        token: 'jdfcfufsjdgskgfkghagyy2t7',
+        token: 'ewyObwixZRThIMQbsy54mv:APA91bG2fa8NcXEtlGKbVDPEyrFkRnJdfiu_a-6vP8LowBAzomB1Sb4oYydpkwk-G4_pzWkgOIip0w8WU8l8Q_RpkYh1sd99_Oh0-x_P3uFW0-fbv0DBQAsg0InKKDSEbF59BSa3qe3a',
         name: 'poeticverse'
       }
     }
@@ -53,6 +53,6 @@ async function broadcastMessages (appNames) {
 
 // Usage:
 const appNames = ['poeticverse']
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < 5; i++) {
   broadcastMessages(appNames)
 }

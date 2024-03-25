@@ -3,7 +3,8 @@ const channelPromise = require('../../config/rabbitmq')
 const MessageService = require('../service/message')
 const AppService = require('../service/app')
 const broker = require('../broker/queue')
-const { sendMessage } = require('../fcm/formats')
+const { sendMessage } = require('../fcm/send')
+const { queueLogger } = require('../../utils/logger')
 
 async function scheduleMessage (channel, msg) {
   try {
@@ -30,12 +31,12 @@ async function scheduleMessage (channel, msg) {
     const [stat, err] = await broker.sendToQueue(channel, queue, newMsg.value)
     if (!stat) {
       // Reschedule
-      console.error(err)
+      queueLogger.error(err)
     } else {
-      console.log(`[INFO] - scheduler: Message ${newMsg._id} successfully sent to queue`)
+      queueLogger.info(` Message ${newMsg._id} successfully sent to queue`)
     }
   } catch (error) {
-    console.error('Error scheduling message', error)
+    queueLogger.error('Error scheduling message', error)
     throw error
   }
 }
@@ -56,16 +57,15 @@ async function startSending () {
   // queues.push(process.env.MAIL_QUEUE)
   // queues.push(process.env.SMS_QUEUE)
   const { channel } = await channelPromise
-  console.log(queues)
   await Promise.all(queues.map(async (queue) => {
     await broker.consumeMessage(channel, queue, async (message) => {
       try {
         if (message instanceof Error) throw message
         const msg = JSON.parse(message)
-        console.log(`[INFO] - sender: Message ${msg._id} successfully received`)
+        queueLogger.info(`Message ${msg._id} successfully received`)
         sendMessage(msg)
       } catch (error) {
-        console.error('Error sending message', error)
+        queueLogger.error('Error sending message' + error)
       }
     })
   }))
