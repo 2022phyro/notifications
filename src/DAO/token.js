@@ -162,7 +162,8 @@ APIKeyModel.verifyKey = async function (token) {
   if (apiKey.expires < new Date()) {
     return { success: false, message: 'API key expired' }
   }
-  const app = apiKey.populate('appId')
+  await apiKey.populate('appId')
+  const app = apiKey.appId
   if (!app) {
     return { success: false, message: 'App not found' }
   }

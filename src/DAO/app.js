@@ -9,7 +9,7 @@
  */
 const App = require('../models/app')
 const Message = require('../models/message')
-const { BLAccessToken, BLRefreshToken } = require('../models/token')
+const { BLAccessToken, BLRefreshToken, APIKey } = require('../models/token')
 const { encryptPassword, generateSecret } = require('../../utils/encrypt')
 
 /**
@@ -105,6 +105,7 @@ AppModel.deleteApp = async function (appId) {
   await Message.deleteMany({ appId })
   await BLAccessToken.deleteMany({ appId })
   await BLRefreshToken.deleteMany({ appId })
+  await APIKey.deleteMany({ appId })
 
   return deletedApp
 }
