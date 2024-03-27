@@ -148,11 +148,8 @@ describe('AppModel', () => {
   it('should return null when retrieving a non-existent app by ID', async () => {
     const appId = '60d2ee9f292a3e2d8c3656f2'
     const filters = {}
-    try {
-      await AppModel.getApp(appId, filters)
-    } catch (err) {
-      expect(err.message).to.equal('App not found')
-    }
+    const val = await AppModel.getApp(appId, filters)
+    expect(val).to.be.null
   })
 
   // Retrieving existing apps with invalid filters should return an empty array.
@@ -172,22 +169,15 @@ describe('AppModel', () => {
       password: 'updatedpassword123',
       phone: '9876543210'
     }
-    try {
-      await AppModel.updateApp(appId, appData)
-    } catch (err) {
-      expect(err.message).to.equal('App not found')
-    }
+    const val = await AppModel.updateApp(appId, appData)
+    expect(val).to.be.null
   })
 
   // Deleting a non-existent app by ID should throw an error.
-  it('should throw an error when deleting a non-existent app by ID', async () => {
+  it('should return null when deleting a non-existent app by ID', async () => {
     const appId = '60d2ee9f292a3e2d8c3656f2'
-    try {
-      await AppModel.deleteApp(appId)
-      throw new Error('Test failed')
-    } catch (error) {
-      expect(error.message).to.equal('App not found')
-    }
+    const val = await AppModel.deleteApp(appId)
+    expect(val).to.be.null
   })
 
   // The app should be retrieved from the database based on the provided ID.

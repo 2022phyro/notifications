@@ -1,5 +1,5 @@
 const mongoDB = require('./config/db')
-const { startConsuming } = require('./src/controllers/queue')
+const { startSending } = require('./src/controllers/queue')
 const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
@@ -9,6 +9,7 @@ const YAML = require('js-yaml')
 const fs = require('fs')
 const AppRouter = require('./src/routes/app')
 const MessageRouter = require('./src/routes/message')
+const APIKeyRouter = require('./src/routes/apiKeys')
 const expressPino = require('pino-http')
 const { serverLogger, logger } = require('./utils/logger')
 require('dotenv').config({ path: './config.env' })
@@ -18,7 +19,6 @@ const limiter = rateLimit({
   max: 200 // limit each IP to 200 requests per windowMs
 })
 
-//  apply to all requests
 const swaggerDocument = YAML.load(fs.readFileSync('./swagger/docs.yaml', 'utf8'))
 const expressLogger = expressPino({ logger: serverLogger })
 
@@ -33,6 +33,7 @@ app.use(helmet())
 
 app.use('/api/v1', AppRouter)
 app.use('/api/v1', MessageRouter)
+app.use('/api/v1/app', APIKeyRouter)
 app.use('/api/v1/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 app.use((err, req, res, next) => {
@@ -43,5 +44,4 @@ mongoDB()
 app.listen(3000, () => {
   logger.child({ name: 'Express' }).info('Express server is running on port 3000')
 })
-
-startConsuming().catch(console.error)
+startSending().catch(console.error)

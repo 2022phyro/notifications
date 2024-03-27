@@ -59,7 +59,7 @@ AppModel.getApp = async function (appId, filters) {
     query = { ...query, ...filters }
   }
   const app = await App.findOne(query)
-  if (!app) throw new Error('App not found')
+  if (!app) return null
   return app.toObject()
 }
 /**
@@ -85,7 +85,7 @@ AppModel.updateApp = async function (appId, appData) {
   }
 
   const app = await App.findById(appId)
-  if (!app) throw new Error('App not found')
+  if (!app) return null
   Object.assign(app, appData)
   const updatedApp = await app.save()
 
@@ -101,9 +101,7 @@ AppModel.updateApp = async function (appId, appData) {
  */
 AppModel.deleteApp = async function (appId) {
   const deletedApp = await App.findByIdAndDelete(appId)
-  if (!deletedApp) {
-    throw new Error('App not found')
-  }
+  if (!deletedApp) return null
   await Message.deleteMany({ appId })
   await BLAccessToken.deleteMany({ appId })
   await BLRefreshToken.deleteMany({ appId })

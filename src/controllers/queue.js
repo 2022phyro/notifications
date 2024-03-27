@@ -36,7 +36,7 @@ async function scheduleMessage (channel, msg) {
       queueLogger.info(` Message ${newMsg._id} successfully sent to queue`)
     }
   } catch (error) {
-    queueLogger.error('Error scheduling message', error)
+    queueLogger.error('Error scheduling message' + error)
     throw error
   }
 }
@@ -72,6 +72,7 @@ async function startSending () {
 }
 
 module.exports = {
+  scheduleMessage,
   startConsuming,
   startSending
 }

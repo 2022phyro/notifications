@@ -1,18 +1,19 @@
+const { queueLogger } = require('../../utils/logger')
 async function createRabbitQueue (channel, app) {
   try {
     await channel.assertQueue(app.name)
-    console.log(`Queue ${app.name} created`)
+    queueLogger.info(`Queue ${app.name} created`)
   } catch (error) {
     error.message = 'QueueError: ' + error.message
-    throw error
+    queueLogger.error(error)
   }
 }
 
 async function updateRabbitQueue (channel, appName, newAppName) {
   try {
     // Create a new queue with the new name
+    await channel.checkQueue(appName)
     await channel.assertQueue(newAppName)
-
     // Move messages from the old queue to the new one
     await channel.consume(appName, (msg) => {
       if (msg !== null) {
@@ -24,21 +25,20 @@ async function updateRabbitQueue (channel, appName, newAppName) {
     // Delete the old queue
     await channel.deleteQueue(appName)
 
-    console.log(`Queue ${appName} updated to ${newAppName}`)
+    queueLogger.info(`Queue ${appName} updated to ${newAppName}`)
   } catch (error) {
-    console.error(`Error while updating queue ${appName}`, error)
     error.message = 'QueueError: ' + error.message
-    throw error
+    queueLogger.error(error)
   }
 }
 
 async function deleteRabbitQueue (channel, appName) {
   try {
     await channel.deleteQueue(appName)
-    console.log(`Queue ${appName} deleted`)
+    queueLogger.info(`Queue ${appName} deleted`)
   } catch (error) {
     error.message = 'QueueError: ' + error.message
-    throw error
+    queueLogger.error(error)
   }
 }
 async function consumeMessage (channel, appName, callback) {
@@ -59,7 +59,7 @@ async function consumeMessage (channel, appName, callback) {
     }, { noAck: false })
   } catch (error) {
     error.message = 'QueueError: ' + error.message
-    throw error
+    queueLogger.error(error)
   }
 }
 

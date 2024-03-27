@@ -26,6 +26,8 @@ tags:
     description: Managing the message objects
   - name: user
     description: Operations about user
+  - name: API Keys
+    description: Gets information about the api keys
 
 paths:
   /signup:
@@ -327,6 +329,99 @@ paths:
               schema:
                 $ref: '#/components/schemas/DefaultError'
 
+  /app/keys:
+    post:
+      tags: [API Keys]
+      security:
+        - api_key: []
+      summary: Create a new API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+      responses:
+        200:
+          description: API key created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKeyResponse'
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+    get:
+      tags: [API Keys]
+      security:
+        - api_key: []
+      summary: List all API keys
+      responses:
+        200:
+          description: API keys retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKeyListResponse'
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+  /app/keys/{name}/revoke:
+    post:
+      tags: [API Keys]
+      security:
+        - api_key: []
+      summary: Revoke an API key
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: API key revoked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKeyResponse'
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+  /app/keys/{name}:
+    delete:
+      tags: [API Keys]
+      security:
+        - api_key: []
+      summary: Delete an API key
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: API key deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKeyResponse'
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
 components:
   schemas:
     App:
@@ -404,12 +499,12 @@ components:
           type: string
           description: The refresh token
           examples:
-            - eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+            - eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c 
         all:
           type: boolean
           description: Logout from all devices
           examples:
-            false
+            - false
     LoginBody:
       type: object
       required:
@@ -660,12 +755,12 @@ components:
                 type: number
                 description: The previous page number
                 examples:
-                  1
+                  - 1
               next:
                 type: number
                 description: The previous page number
                 examples:
-                  1
+                  - 1
               messages:
                 type: array
                 description: A list of retrieved messages
@@ -730,6 +825,103 @@ components:
           examples:
             - 0
  
+    APIKey:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Unique identifer for each key
+          examples:
+            - guhj2dbj
+        created:
+          type: string
+          description: when the key was created
+          format: date-time
+          examples:
+            - '2022-01-01T00:00:00Z'
+        expires:
+          type: string
+          description: when the key expires
+          format: date-time
+          examples:
+            -'2023-01-01T00:00:00Z'
+        revoked:
+          type: boolean
+          description: The status of the key if it has been revoked or not
+          examples:
+            - false
+        appId:
+          type: string
+          format: oid
+          description: The app id the api key belongs to
+          examples:
+            - 60d2ee9f292a3e2d8c3656f2
+
+    APIKeyResponse:
+      type: object
+      required:
+        - status
+        - message
+        - errors
+        - data
+      properties:
+        status:
+          type: number
+          description: Status code
+          examples:
+            - 200
+        message:
+          type: string
+          description: Resposne message
+          examples: 
+            - 'Response Successful'
+        errors:
+          type: object
+          description: Empty
+          examples:
+            - {}
+        data:
+          type: object
+          description: The api key
+          $ref: '#/components/schemas/APIKey'
+
+    APIKeyListResponse:
+      type: object
+      required:
+        - status
+        - message
+        - errors
+        - data
+      properties:
+        status:
+          type: number
+          description: Status code
+          examples:
+            - 200
+        message:
+          type: string
+          description: Resposne message
+          examples: 
+            - 'Response Successful'
+        errors:
+          type: object
+          description: Empty
+          examples:
+            - {}
+        data:
+          type: object
+          description: All the keys associated with the app
+          required:
+            - keys
+          properties:
+            keys:
+              type: array
+              description: All the keys of the app
+              items:
+                type: object
+                description: The key proper
+                $ref: '#/components/schemas/APIKey'
+
   securitySchemes:
     api_key:
       type: apiKey

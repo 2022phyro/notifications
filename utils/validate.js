@@ -121,29 +121,29 @@ function validateApp (app) {
   const errors = {}
   if (app.name) {
     const [invalid, msgs] = validateName(app.name)
-    if (invalid) {
+    if (!invalid) {
       errors.name = msgs
     }
   }
   if (app.password) {
     const [invalid, msgs] = validatePwd(app.password)
-    if (invalid) {
+    if (!invalid) {
       errors.password = msgs
     }
   }
   if (app.email) {
     const [invalid, msgs] = validateEmail(app.email)
-    if (invalid) {
+    if (!invalid) {
       errors.email = msgs
     }
   }
   if (app.phone) {
     const [invalid, msgs] = validatePhone(app.phone)
-    if (invalid) {
+    if (!invalid) {
       errors.phone = msgs
     }
   }
-  return [Object.keys(errors).length > 0, errors]
+  return [Object.keys(errors).length === 0, errors]
 }
 module.exports = {
   recipientSchema,

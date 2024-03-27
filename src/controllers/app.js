@@ -71,7 +71,7 @@ async function signup (req, res) {
         }))
     }
 
-    dbLogger.error(error.message, error)
+    dbLogger.error(error)
 
     return res
       .status(400)
@@ -81,6 +81,14 @@ async function signup (req, res) {
   }
 }
 
+/**
+ * Logs in the user with the provided credentials.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the login process is complete.
+ * @throws {Error} - If an error occurs during the login process.
+ */
 async function login (req, res) {
   const errors = {}
   try {
@@ -115,18 +123,22 @@ async function login (req, res) {
     }
     res.status(200).json(rP.getResponse(200, 'App login successful', data))
   } catch (error) {
-    if (error.message.endsWith('not found')) {
-      return res.status(404).json(rP.getErrorResponse(400, 'App login failed', {
-        signup: [error.message]
-      }))
-    }
-    dbLogger.error(error.message, error)
+    dbLogger.error(error)
     res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {
       signup: [error.message]
     }))
   }
 }
 
+/**
+ * Logs out the user by blacklisting the provided refresh token and access token.
+ * If the 'all' parameter is true, it also generates a new secret for the app.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the logout process is complete.
+ * @throws {Error} - If an error occurs during the logout process.
+ */
 async function logout (req, res) {
   try {
     const { refresh, all } = req.body
@@ -148,13 +160,20 @@ async function logout (req, res) {
     }
     res.status(204).json()
   } catch (error) {
-    dbLogger.error(error.message, error)
+    dbLogger.error(error)
     res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {
       logout: [error.message]
     }))
   }
 }
 
+/**
+ * Retrieves an app.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the app is retrieved successfully.
+ */
 async function getApp (req, res) {
   try {
     const app = req.app
@@ -164,18 +183,21 @@ async function getApp (req, res) {
     delete app.verified
     res.status(200).json(rP.getResponse(200, 'App retrieved successfully', app))
   } catch (error) {
-    if (error.message.endsWith('not found')) {
-      return res.status(404).json(rP.getErrorResponse(400, 'App registration failed', {
-        signup: [error.message]
-      }))
-    }
-    dbLogger.error(error.message, error)
+    dbLogger.error(error)
     res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {
       lookup: [error.message]
     }))
   }
 }
 
+/**
+ * Updates an app with the provided data.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the app is updated.
+ * @throws {Error} - If there is an error during the update process.
+ */
 async function patchApp (req, res) {
   try {
     const app = req.app
@@ -188,26 +210,28 @@ async function patchApp (req, res) {
     }
 
     const updatedApp = await AppService.updateApp(app._id, updates)
+    if (!updatedApp) {
+      return res.status(404).json(rP.getErrorResponse(400, 'App registration failed', {
+        update: ['App not found']
+      }))
+    }
     const { channel } = await channelPromise
-    await updateRabbitQueue(channel, app.name, updatedApp.name)
+    if (updates.name && app.name !== updates.name) {
+      await updateRabbitQueue(channel, app.name, updatedApp.name)
+    }
     res.status(200).json(rP.getResponse(200, 'App updated successfully', updatedApp))
   } catch (error) {
     if ([11000, 11001].includes(error.code)) {
       return res.status(400).json(rP.getErrorResponse(400, 'App registration failed', {
-        signup: ['That name is already taken. Please choose another']
+        update: ['That name is already taken. Please choose another']
       }))
     } else if (error.message.startsWith('Validation failed:')) {
       return res.status(400).json(rP.getErrorResponse(400, 'App registration failed', {
-        signup: [error.message.split(': ')[1]]
+        update: [error.message.split(': ')[1]]
       }))
     }
     if (error.startsWith('QueueError')) {
       queueLogger.error(error.message, error)
-    }
-    if (error.message.endsWith('not found')) {
-      return res.status(404).json(rP.getErrorResponse(400, 'App registration failed', {
-        signup: [error.message]
-      }))
     }
     dbLogger.error(error.message, error)
     res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {
@@ -216,22 +240,30 @@ async function patchApp (req, res) {
   }
 }
 
+/**
+ * Deletes an app.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the app is deleted.
+ * @throws {Error} - If there is an error deleting the app.
+ */
 async function deleteApp (req, res) {
   try {
     const app = req.app
     const appName = app.name
-    await AppService.deleteApp(app._id)
+    const deleted = await AppService.deleteApp(app._id)
+    if (!deleted) {
+      return res.status(404).json(rP.getErrorResponse(400, 'App registration failed', {
+        delete: ['App not found']
+      }))
+    }
     const { channel } = await channelPromise
     await deleteRabbitQueue(channel, appName)
     res.status(204).json()
   } catch (error) {
     if (error.startsWith('QueueError')) {
       queueLogger.error(error.message, error)
-    }
-    if (error.message.endsWith('not found')) {
-      return res.status(404).json(rP.getErrorResponse(400, 'App registration failed', {
-        signup: [error.message]
-      }))
     }
     dbLogger.error(error.message, error)
     res.status(500).json(rP.getErrorResponse(500, 'Internal Server Error', {
@@ -240,6 +272,13 @@ async function deleteApp (req, res) {
   }
 }
 
+/**
+ * Refreshes the access token using the provided refresh token.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the token is refreshed.
+ */
 async function refreshToken (req, res) {
   try {
     const { refresh } = req.body
@@ -251,7 +290,6 @@ async function refreshToken (req, res) {
     })
   }
 }
-// Remember to implement the getApps, verify account, reset password etc
 
 module.exports = {
   signup,
