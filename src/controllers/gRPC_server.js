@@ -2,10 +2,12 @@ const { APIKeyModel } = require('../DAO/token')
 const channelPromise = require('../../config/rabbitmq')
 const { scheduleMessage } = require('./queue')
 const grpc = require('@grpc/grpc-js')
+const { gRPCLogger } = require('../../utils/logger')
 async function authorizeGRPC (call) {
   const metadata = call.metadata.getMap()
   const token = metadata.authorization
   const { success, message } = await APIKeyModel.verifyKey(token)
+  gRPCLogger.info('Connection established with a client')
   if (!success) {
     console.log(message)
     call.emit('error', {

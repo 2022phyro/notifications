@@ -3,10 +3,10 @@ const { authenticateJWT } = require('../middleware/auth')
 const MessageController = require('../controllers/message')
 const router = express.Router()
 
-router.get('/app/messages/:id', authenticateJWT, MessageController.getMessage)
-router.get('/app/messages', authenticateJWT, MessageController.getMessages)
-router.get('/app/messages/:id/read', authenticateJWT, MessageController.markAsRead)
-router.delete('/app/message/:id', authenticateJWT, MessageController.deleteMessage)
-router.delete('/app/messages', authenticateJWT, MessageController.deleteAllMessages)
+router.get('messages/:id', authenticateJWT, MessageController.getMessage)
+router.get('messages', authenticateJWT, MessageController.getMessages)
+router.get('messages/:id/read', authenticateJWT, MessageController.markAsRead)
+router.delete('messages/:id', authenticateJWT, MessageController.deleteMessage)
+router.delete('messages', authenticateJWT, MessageController.deleteAllMessages)
 
 module.exports = router

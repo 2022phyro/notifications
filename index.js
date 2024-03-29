@@ -10,9 +10,10 @@ const fs = require('fs')
 const AppRouter = require('./src/routes/app')
 const MessageRouter = require('./src/routes/message')
 const APIKeyRouter = require('./src/routes/apiKeys')
+const UserRouter = require('./src/routes/user')
 const expressPino = require('pino-http')
 const { serverLogger, logger } = require('./utils/logger')
-require('dotenv').config({ path: './config.env' })
+require('dotenv').config()
 
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -32,8 +33,9 @@ app.use(cors())
 app.use(helmet())
 
 app.use('/api/v1', AppRouter)
-app.use('/api/v1', MessageRouter)
-app.use('/api/v1/app', APIKeyRouter)
+app.use('/api/v1/app', MessageRouter)
+app.use('/api/v1/app/', APIKeyRouter)
+app.use('/api/v1/app/', UserRouter)
 app.use('/api/v1/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 app.use((err, req, res, next) => {

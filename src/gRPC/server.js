@@ -1,8 +1,11 @@
 const grpc = require('@grpc/grpc-js')
 const protoLoader = require('@grpc/proto-loader')
 const mongoDB = require('../../config/db')
+const { gRPCLogger } = require('../../utils/logger')
 const { handleGRPCData } = require('../controllers/gRPC_server')
-const PROTO_PATH = './notification.proto'
+const path = require('path')
+const baseDir = path.resolve(__dirname, './')
+const PROTO_PATH = path.join(baseDir, 'notification.proto')
 
 const packageDefinition = protoLoader.loadSync(
   PROTO_PATH,
@@ -33,5 +36,5 @@ const serviceImpl = {
 mongoDB()
 server.addService(NotificationService.service, serviceImpl)
 server.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), () => {
-  console.log('Server started on port 50051')
+  gRPCLogger.info('Server started on port 50051')
 })

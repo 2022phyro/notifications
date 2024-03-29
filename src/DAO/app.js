@@ -11,7 +11,7 @@ const App = require('../models/app')
 const Message = require('../models/message')
 const { BLAccessToken, BLRefreshToken, APIKey } = require('../models/token')
 const { encryptPassword, generateSecret } = require('../../utils/encrypt')
-
+const User = require('../models/user')
 /**
  * Represents the AppModel class for handling database operations.
  *
@@ -106,6 +106,7 @@ AppModel.deleteApp = async function (appId) {
   await BLAccessToken.deleteMany({ appId })
   await BLRefreshToken.deleteMany({ appId })
   await APIKey.deleteMany({ appId })
+  await User.deleteMany({ appId })
 
   return deletedApp
 }

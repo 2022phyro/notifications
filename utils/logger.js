@@ -8,7 +8,7 @@ const logger = pino({
       // hideObject: true
     }
   }
-})
+}, pino.destination('logs/general.log'))
 
 const serverLogger = pino({
   name: 'Express',
@@ -20,14 +20,17 @@ const serverLogger = pino({
       hideObject: true
     }
   }
-})
+}, pino.destination('logs/express.log'))
 
 const queueLogger = logger.child({ name: 'RabbitMQ' })
+const gRPCLogger = logger.child({ name: 'gRPC' })
 const fcmLogger = logger.child({ name: 'FCM' })
 const dbLogger = logger.child({ name: 'MongoDB' })
+
 module.exports = {
   serverLogger,
   queueLogger,
+  gRPCLogger,
   fcmLogger,
   dbLogger,
   logger

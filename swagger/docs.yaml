@@ -25,8 +25,8 @@ tags:
   - name: message
     description: Managing the message objects
   - name: user
-    description: Operations about user
-  - name: API Keys
+    description: Operations about user, subscribing a device, etc
+  - name: api keys
     description: Gets information about the api keys
 
 paths:
@@ -331,7 +331,7 @@ paths:
 
   /app/keys:
     post:
-      tags: [API Keys]
+      tags: [api keys]
       security:
         - api_key: []
       summary: Create a new API key
@@ -355,7 +355,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DefaultError'
     get:
-      tags: [API Keys]
+      tags: [api keys]
       security:
         - api_key: []
       summary: List all API keys
@@ -374,7 +374,7 @@ paths:
                 $ref: '#/components/schemas/DefaultError'
   /app/keys/{name}/revoke:
     post:
-      tags: [API Keys]
+      tags: [api keys]
       security:
         - api_key: []
       summary: Revoke an API key
@@ -399,7 +399,7 @@ paths:
                 $ref: '#/components/schemas/DefaultError'
   /app/keys/{name}:
     delete:
-      tags: [API Keys]
+      tags: [api keys]
       security:
         - api_key: []
       summary: Delete an API key
@@ -422,6 +422,118 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DefaultError'
+  /app/users/{userId}:
+    get:
+      tags: [user]
+      security:
+        - api_key: []
+      summary: Get a user's details
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          description: The user ID
+      responses:
+        200:
+          description: User details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+    delete:
+      tags: [user]
+      security:
+        - api_key: []
+      summary: Delete a user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          description: The user ID
+      responses:
+        204:
+          description: User deleted successfully
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+  /app/users/{userId}/unsubscribe:
+    post:
+      tags: [user]
+      security:
+        - api_key: []
+      summary: Unsubscribe a user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          description: The user ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Subscription'
+      responses:
+        200:
+          description: User unsubscribed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultSuccess'
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+  /app/users/{userId}/subscribe:
+    post:
+      tags: [user]
+      security:
+        - api_key: []
+      summary: Subscribe a user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          description: The user ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Subscription'
+      responses:
+        200:
+          description: User subscribed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultSuccess'
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
+
 components:
   schemas:
     App:
@@ -838,13 +950,13 @@ components:
           description: when the key was created
           format: date-time
           examples:
-            - '2022-01-01T00:00:00Z'
+            - 2022-01-01T00:00:00Z
         expires:
           type: string
           description: when the key expires
           format: date-time
           examples:
-            -'2023-01-01T00:00:00Z'
+            - 2023-01-01T00:00:00Z
         revoked:
           type: boolean
           description: The status of the key if it has been revoked or not
@@ -921,6 +1033,76 @@ components:
                 type: object
                 description: The key proper
                 $ref: '#/components/schemas/APIKey'
+
+    Subscription:
+      type: object
+      required:
+        - p256dh
+        - auth
+        - endpoint
+      properties:
+        p256dh:
+          type: string
+          description: The public key of the user
+          examples: 
+            - fddjfhbghbdkhjhdjihfjh
+        auth:
+          type: string
+          description: The auth secret of the user
+          examples:
+            - dfhjgskhdfkjbvhjdghfkhgkjcbkjcfgf
+        endpoint:
+          type: string
+          format: url
+          description: The unique endpoint generated for each device
+          examples:
+            - https://example.com/p39704798475495490
+    UserResponse:
+      type: object
+      required:
+        - status
+        - message
+        - errors
+        - data
+      properties:
+        status:
+          type: number
+          description: Status code
+          examples:
+            - 200
+        message:
+          type: string
+          description: Resposne message
+          examples: 
+            - 'Response Successful'
+        errors:
+          type: object
+          description: Empty
+          examples:
+            - {}
+        data:
+          type: object
+          description: The api key
+          required: 
+            - _id
+            - dbId
+            - deviceCount
+          properties:
+            _id:
+              type: string
+              description: The ID of the app
+              examples:
+                - '60d2ee9f292a3e2d8c3656f2'
+            dbId:
+              type: string
+              description: The id by which the user is identified in the app's own database
+              examples:
+                - 'abcdacebde12beb44ebe'
+            deviceCount:
+              type: number
+              description: The number of devices the users has subscribed to the service
+              examples:
+                - 3
 
   securitySchemes:
     api_key:

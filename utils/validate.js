@@ -64,6 +64,16 @@ const appUpdateSchema = {
   },
   additionalProperties: false
 }
+
+const subscriptionSchema = {
+  type: 'object',
+  properties: {
+    p256dh: { type: 'string' },
+    auth: { type: 'string' },
+    endpoint: { type: 'string' }
+  },
+  required: ['p256dh', 'auth', 'endpoint']
+}
 function validateSchema (obj, schema) {
   const validate = ajv.compile(schema)
   const valid = validate(obj)
@@ -150,6 +160,7 @@ module.exports = {
   fcmSchema,
   appSchema,
   appUpdateSchema,
+  subscriptionSchema,
   validateSchema,
   validateName,
   validatePwd,
