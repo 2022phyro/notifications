@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const AppService = require('../service/app')
+const App = require('../DAO/app')
 const TokenDAO = require('../DAO/token')
 const { getErrorResponse } = require('../../utils/response')
 
@@ -19,7 +19,7 @@ async function authenticateJWT (req, res, next) {
       const decoded = jwt.decode(token)
 
       // Get the app
-      const app = await AppService.getApp(decoded.sub)
+      const app = await App.getApp(decoded.sub)
       if (!app) {
         return res.status(401).json(getErrorResponse(401, 'Authentication failed', { auth: ['App not found'] }))
       }

@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs')
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
-const App = require('../src/models/app')
+const AppModel = require('../src/models/app')
 const { isBlacklisted, blacklist } = require('../src/DAO/token')
 
 /**
@@ -82,7 +82,7 @@ async function refreshTokens (oldRefreshToken) {
       throw new Error('Invalid refresh token')
     }
     // Get the app
-    const app = await App.findById(decoded.sub)
+    const app = await AppModel.findById(decoded.sub)
     if (!app) {
       throw new Error('App not found')
     }
@@ -98,10 +98,28 @@ async function refreshTokens (oldRefreshToken) {
     throw new Error('Invalid refresh token')
   }
 }
+function encrypt (target, secret) {
+  const iv = crypto.randomBytes(16) // Generate a random IV
+  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(secret, 'hex'), iv)
+  let encrypted = cipher.update(target, 'utf8', 'hex')
+  encrypted += cipher.final('hex')
+  return iv.toString('hex') + encrypted
+}
+
+function decrypt (encrypted, secret) {
+  const iv = Buffer.from(encrypted.slice(0, 32), 'hex') // Extract IV from the encrypted string
+  encrypted = encrypted.slice(32) // Remove IV from the encrypted string
+  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secret, 'hex'), iv)
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8')
+  decrypted += decipher.final('utf8')
+  return decrypted
+}
 module.exports = {
   encryptPassword,
   getJWTTokens,
   generateSecret,
   refreshTokens,
-  verifyPassword
+  verifyPassword,
+  encrypt,
+  decrypt
 }

@@ -16,11 +16,12 @@ const App = {
     delete appData.secret
     delete appData.vapidKeys
 
-    const appSecret = generateSecret()
+    const appSecret = generateSecret(32)
+    if (appData.password) appData.password = encryptPassword(appData.password)
     // const hashedSecret = encrypt(appSecret, appSecret)
     const { publicKey, privateKey } = webpush.generateVAPIDKeys()
-    const hashedpuKey = encrypt(appSecret, publicKey)
-    const hashedprKey = encrypt(appSecret, privateKey)
+    const hashedpuKey = encrypt(publicKey, appSecret)
+    const hashedprKey = encrypt(privateKey, appSecret)
     const vapidKeys = { publicKey: hashedpuKey, privateKey: hashedprKey }
     appData.vapidKeys = vapidKeys
     appData.secret = appSecret
@@ -35,7 +36,7 @@ const App = {
    * @param {object} filters - Optional filters to apply when retrieving the app.
    * @returns {Promise<object>} - A promise that resolves to the retrieved app.
    */
-  async getAPP (appId, filters) {
+  async getApp (appId, filters) {
     let query = {}
     if (appId) {
       query._id = appId
@@ -105,9 +106,11 @@ const App = {
     const { publicKey, privateKey } = app.vapidKeys
     const spublicKey = decrypt(publicKey, secret)
     const sprivateKey = decrypt(privateKey, secret)
-    const newSecret = generateSecret()
-    app.vapidKeys.publicKey = encrypt(spublicKey, newSecret)
-    app.vapidKeys.privateKey = encrypt(sprivateKey, newSecret)
+    const newSecret = generateSecret(32)
+    app.vapidKeys = {
+      publicKey: encrypt(spublicKey, newSecret),
+      privateKey: encrypt(sprivateKey, newSecret)
+    }
     app.secret = newSecret
     await app.save()
     return newSecret

@@ -1,4 +1,4 @@
-const { BLAccessToken, BLRefreshToken, APIKeyModel } = require('../models/token')
+const { BLAccessTokenModel, BLRefreshTokenModel, APIKeyModel } = require('../models/token')
 const crypto = require('crypto')
 
 /**
@@ -11,10 +11,10 @@ const crypto = require('crypto')
 async function blacklist (appId, token, type) {
   try {
     if (type === 'access') {
-      const newAccessToken = new BLAccessToken({ token, appId })
+      const newAccessToken = new BLAccessTokenModel({ token, appId })
       await newAccessToken.save()
     } else if (type === 'refresh') {
-      const newRefreshToken = new BLRefreshToken({ token, appId })
+      const newRefreshToken = new BLRefreshTokenModel({ token, appId })
       await newRefreshToken.save()
     } else {
       throw new Error('Invalid token type')
@@ -36,10 +36,10 @@ async function blacklist (appId, token, type) {
 async function isBlacklisted (token, type) {
   try {
     if (type === 'access') {
-      const blacklistedToken = await BLAccessToken.findOne({ token })
+      const blacklistedToken = await BLAccessTokenModel.findOne({ token })
       return !!blacklistedToken
     } else if (type === 'refresh') {
-      const blacklistedToken = await BLRefreshToken.findOne({ token })
+      const blacklistedToken = await BLRefreshTokenModel.findOne({ token })
       return !!blacklistedToken
     } else {
       throw new Error('Invalid token type')

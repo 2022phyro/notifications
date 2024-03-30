@@ -1,5 +1,5 @@
 // Import any required modules or dependencies
-const MsgService = require('../service/message')
+const Message = require('../DAO/message')
 const rP = require('../../utils/response')
 
 async function getMessages (req, res) {
@@ -13,7 +13,7 @@ async function getMessages (req, res) {
     console.log(limit)
     console.log(filters)
 
-    const data = await MsgService.getMessages(app._id, page, limit, filters)
+    const data = await Message.getMessages(app._id, page, limit, filters)
     res.status(200).json(rP.getResponse(200, 'Messages retrieved successfully', data))
   } catch (error) {
     res.status(500).json(rP.getErrorResponse(500, 'Message retrieval failed', { getMessage: [error.message] }))
@@ -25,7 +25,7 @@ async function deleteMessage (req, res) {
   try {
     const app = req.app
     const { id } = req.params
-    const success = await MsgService.deleteMessage(app._id, id)
+    const success = await Message.deleteMessage(app._id, id)
     if (success === 'denied') {
       return res.status(403).json(rP.getErrorResponse(403, 'Message deletion unauthorized', { deleteMessage: ["You don't have the permission to delete this message"] }))
     } else if (success === 'not found') {
@@ -41,7 +41,7 @@ async function deleteAllMessages (req, res) {
   try {
     const app = req.app
     const filters = req.query
-    await MsgService.deleteAllMessages(app._id, filters)
+    await Message.deleteAllMessages(app._id, filters)
     res.status(204).json()
   } catch (error) {
     res.status(400).json(rP.getErrorResponse(500, 'Message deletion failed', { deleteAllMessages: [error.message] }))
@@ -52,7 +52,7 @@ async function getMessage (req, res) {
   try {
     const app = req.app
     const { id } = req.params
-    const message = await MsgService.getMessage(id, { appId: app._id })
+    const message = await Message.getMessage(id, { appId: app._id })
     if (!message) {
       return res.status(404).json(rP.getErrorResponse(404, 'Message not found', { getMessage: ['The message you are trying to retrieve does not exist'] }))
     } else {
@@ -67,7 +67,7 @@ async function markAsRead (req, res) {
   try {
     const app = req.app
     const { id } = req.params
-    const success = await MsgService.updateMessage(id, { read: true }, { appId: app._id })
+    const success = await Message.updateMessage(id, { read: true }, { appId: app._id })
     delete success.value
     delete success.__v
     if (!success) {

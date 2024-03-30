@@ -44,7 +44,6 @@ async function signup (req, res) {
 
     // Generate JWT tokens for the app
     const tokens = getJWTTokens(app)
-
     // Prepare the response data
     const data = {
       tokens,
@@ -102,7 +101,6 @@ async function login (req, res) {
     const [stat, err] = vD.validateName(name)
     if (!stat) errors.name = err
     const [lstat, err2] = vD.validatePwd(password)
-    console.log(lstat, err2)
     if (!lstat) errors.password = err2
 
     if (Object.keys(errors).length > 0) {
@@ -176,12 +174,14 @@ async function logout (req, res) {
  */
 async function getApp (req, res) {
   try {
-    const app = req.app
+    const app = req.app.toObject()
+    app.VAPIDKey = App.decrypt(app, app.vapidKeys.publicKey)
     // delete app.__v
     // delete app.password
     // delete app.secret
     // delete app.verified
-    res.status(200).json(rP.getResponse(200, 'App retrieved successfully', app))
+    const { secret, __v, password, verified, vapidKeys, ...result } = app
+    res.status(200).json(rP.getResponse(200, 'App retrieved successfully', result))
   } catch (error) {
     dbLogger.error(error)
     res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {

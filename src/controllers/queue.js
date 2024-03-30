@@ -1,7 +1,7 @@
 const { fcmSchema, validateSchema } = require('../../utils/validate')
 const channelPromise = require('../../config/rabbitmq')
-const MessageService = require('../service/message')
-const AppService = require('../service/app')
+const Message = require('../DAO/message')
+const App = require('../DAO/app')
 const broker = require('../broker/queue')
 const { sendMessage } = require('../fcm/send')
 const { queueLogger } = require('../../utils/logger')
@@ -25,7 +25,7 @@ async function scheduleMessage (channel, msg) {
       default:
         throw new Error('Invalid message format')
     }
-    const newMsg = await MessageService.newMessage(message)
+    const newMsg = await Message.newMessage(message)
     newMsg.value._id = newMsg._id
     newMsg.value.data = { _id: newMsg._id, ...newMsg.value.data, ...message.payload }
     const [stat, err] = await broker.sendToQueue(channel, queue, newMsg.value)
@@ -42,7 +42,7 @@ async function scheduleMessage (channel, msg) {
 }
 
 async function startConsuming () {
-  const apps = await AppService.getApps()
+  const apps = await App.getApps()
   const { confirmChannel, channel } = await channelPromise
   await Promise.all(apps.map(async (app) => {
     await broker.consumeMessage(channel, app.name, (message) => {

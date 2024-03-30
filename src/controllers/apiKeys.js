@@ -1,4 +1,4 @@
-const { APIKeyModel } = require('../DAO/token')
+const { APIKey } = require('../DAO/token')
 const rP = require('../../utils/response')
 const { dbLogger } = require('../../utils/logger')
 
@@ -11,7 +11,7 @@ async function createAPIKey (req, res) {
     if (!expDate) {
       return res.status(400).json(rP.getErrorResponse(400, 'Bad Request', { apikey: ['Invalid expires date'] }))
     }
-    const key = await APIKeyModel.newKey(app._id, expDate)
+    const key = await APIKey.newKey(app._id, expDate)
     return res.status(200).json(rP.getResponse(200, 'API key created', key))
   } catch (error) {
     dbLogger.error(error)
@@ -26,7 +26,7 @@ async function createAPIKey (req, res) {
 async function listAPIKeys (req, res) {
   try {
     const app = req.app
-    const keys = await APIKeyModel.allKeys({ appId: app._id })
+    const keys = await APIKey.allKeys({ appId: app._id })
     return res.status(200).json(rP.getResponse(200, 'All api keys retrieved', keys))
   } catch (error) {
     dbLogger.error(error)
@@ -45,7 +45,7 @@ async function revokeAPIKey (req, res) {
     if (!name) {
       return res.status(400).json(rP.getErrorResponse(400, 'Bad Request', { apikey: ['Name is required'] }))
     }
-    const result = await APIKeyModel.revokeKey(name, app._id)
+    const result = await APIKey.revokeKey(name, app._id)
     if (!result) {
       return res.status(404).json(rP.getErrorResponse(404, 'Not Found', { apikey: ['API key not found'] }))
     }
@@ -62,7 +62,7 @@ async function deleteAPIKey (req, res) {
     if (!name) {
       return res.status(400).json(rP.getErrorResponse(400, 'Bad Request', { apikey: ['Name is required'] }))
     }
-    const result = await APIKeyModel.deleteKey(name, req.app._id)
+    const result = await APIKey.deleteKey(name, req.app._id)
     if (!result) {
       return res.status(404).json(rP.getErrorResponse(404, 'Not Found', { apikey: ['API key not found'] }))
     }

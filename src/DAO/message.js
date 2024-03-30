@@ -1,16 +1,16 @@
-const Message = require('../models/message')
+const MessageModel = require('../models/message')
 
-function MessageModel (payload, data) {
+function Message (payload, data) {
   this.nType = payload.nType
   this.appId = payload.appId
   this.userId = payload.userId
   this.value = data
 }
 
-MessageModel.createMessage = async function (payload, data) {
+Message.createMessage = async function (payload, data) {
   try {
-    const msgModel = new MessageModel(payload, data)
-    const msg = new Message(msgModel)
+    const msgModel = new Message(payload, data)
+    const msg = new MessageModel(msgModel)
     await msg.save()
     return msg
   } catch (error) {
@@ -19,7 +19,7 @@ MessageModel.createMessage = async function (payload, data) {
   }
 }
 
-MessageModel.getMessage = async function (msgId, filters) {
+Message.getMessage = async function (msgId, filters) {
   let query = {}
   try {
     if (msgId) {
@@ -28,7 +28,7 @@ MessageModel.getMessage = async function (msgId, filters) {
     if (filters) {
       query = { ...query, ...filters }
     }
-    const msg = await Message.findOne(query)
+    const msg = await MessageModel.findOne(query)
     if (!msg) return null
     return msg.toObject()
   } catch (error) {
@@ -37,11 +37,11 @@ MessageModel.getMessage = async function (msgId, filters) {
   }
 }
 
-MessageModel.getMessages = async function (appId, page = 1, limit = 30, filters = {}) {
+Message.getMessages = async function (appId, page = 1, limit = 30, filters = {}) {
   try {
     const query = { ...filters, appId }
     console.log(page, limit)
-    const messages = await Message.find(query, { __v: 0, value: 0 })
+    const messages = await MessageModel.find(query, { __v: 0, value: 0 })
       .skip((page - 1) * limit)
       .limit(limit)
       .lean()
@@ -54,9 +54,9 @@ MessageModel.getMessages = async function (appId, page = 1, limit = 30, filters 
   }
 }
 
-MessageModel.updateMessage = async function (msgId, msgData, filters = {}) {
+Message.updateMessage = async function (msgId, msgData, filters = {}) {
   try {
-    const updatedMsg = await Message.findOneAndUpdate({ _id: msgId, ...filters }, msgData, { new: true })
+    const updatedMsg = await MessageModel.findOneAndUpdate({ _id: msgId, ...filters }, msgData, { new: true })
     if (!updatedMsg) return null
     return updatedMsg
   } catch (error) {
@@ -65,9 +65,9 @@ MessageModel.updateMessage = async function (msgId, msgData, filters = {}) {
   }
 }
 
-MessageModel.deleteMessage = async function (appId, msgId) {
+Message.deleteMessage = async function (appId, msgId) {
   try {
-    const deletedMsg = await Message.findById(msgId)
+    const deletedMsg = await MessageModel.findById(msgId)
     if (!deletedMsg) return 'not found'
     if (deletedMsg.appId !== appId) return 'denied'
     await deletedMsg.remove()
@@ -77,17 +77,17 @@ MessageModel.deleteMessage = async function (appId, msgId) {
     throw error
   }
 }
-MessageModel.deleteMessages = async function (appId, filters) {
+Message.deleteMessages = async function (appId, filters) {
   try {
     if (!filters || Object.keys(filters).length === 0) {
       throw new Error('Filters must not be empty')
     }
     const query = { ...filters, appId }
-    const deletedMessages = await Message.deleteMany(query)
+    const deletedMessages = await MessageModel.deleteMany(query)
     return deletedMessages.deletedCount
   } catch (error) {
     console.error('Error deleting messages', error)
     throw error
   }
 }
-module.exports = MessageModel
+module.exports = Message

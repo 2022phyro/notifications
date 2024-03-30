@@ -1,4 +1,4 @@
-const UserModel = require('../DAO/user')
+const User = require('../DAO/user')
 const rP = require('../../utils/response')
 const vD = require('../../utils/validate')
 const { dbLogger } = require('../../utils/logger')
@@ -8,7 +8,7 @@ async function subscribe (req, res) {
     const { userId } = req.params
     const tokens = req.body
     vD.validateSchema(tokens, vD.subscriptionSchema)
-    const user = await UserModel.subscribe(userId, req.app._id, tokens)
+    const user = await User.subscribe(userId, req.app._id, tokens)
     if (!user) {
       return res
         .status(400)
@@ -42,7 +42,7 @@ async function unsubscribe (req, res) {
     const tokens = req.body
     const { userId } = req.params
     vD.validateSchema(tokens, vD.subscriptionSchema)
-    const user = await UserModel.unsubscribe(userId, req.app._id, tokens)
+    const user = await User.unsubscribe(userId, req.app._id, tokens)
     if (!user) {
       return res
         .status(404)
@@ -74,7 +74,7 @@ async function unsubscribe (req, res) {
 async function deleteUser (req, res) {
   try {
     const { userId } = req.params
-    const user = await UserModel.delete(userId, req.app._id)
+    const user = await User.delete(userId, req.app._id)
     if (!user) {
       return res
         .status(400)
@@ -93,7 +93,7 @@ async function deleteUser (req, res) {
 async function getUser (req, res) {
   try {
     const { userId } = req.params
-    const user = await UserModel.get(userId, req.app._id)
+    const user = await User.get(userId, req.app._id)
     if (!user) {
       return res
         .status(404)
