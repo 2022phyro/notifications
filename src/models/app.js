@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-
 const appSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -30,9 +29,13 @@ const appSchema = new mongoose.Schema({
   verified: {
     type: Boolean,
     default: false
+  },
+  vapidKeys: {
+    type: Object,
+    required: true
   }
 })
 
-const App = mongoose.model('App', appSchema)
+const AppModel = mongoose.model('App', appSchema)
 
-module.exports = App
+module.exports = AppModel

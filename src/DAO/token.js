@@ -1,4 +1,4 @@
-const { BLAccessToken, BLRefreshToken, APIKey } = require('../models/token')
+const { BLAccessToken, BLRefreshToken, APIKeyModel } = require('../models/token')
 const crypto = require('crypto')
 
 /**
@@ -50,7 +50,7 @@ async function isBlacklisted (token, type) {
   }
 }
 
-function APIKeyModel (app, key, name, expires) {
+function APIKey (app, key, name, expires) {
   this.key = key
   this.name = name
   this.appId = app
@@ -65,7 +65,7 @@ function APIKeyModel (app, key, name, expires) {
  * @returns {Promise<Object>} - A promise that resolves to the newly generated API key.
  * @throws {Error} - If the API key fails to save after 10 attempts.
  */
-APIKeyModel.newKey = async function (app, expires) {
+APIKey.newKey = async function (app, expires) {
   const key = crypto.randomBytes(32).toString('hex')
   let name = crypto.randomBytes(7).toString('hex')
   /**
@@ -74,7 +74,7 @@ APIKeyModel.newKey = async function (app, expires) {
    * @type {string}
    */
   const hashedKey = crypto.createHash('sha256').update(key).digest('hex')
-  let result = new APIKey({ key: hashedKey, name, appId: app, expires })
+  let result = new APIKeyModel({ key: hashedKey, name, appId: app, expires })
   let saved = false
   for (let count = 0; count < 10; count++) {
     try {
@@ -84,7 +84,7 @@ APIKeyModel.newKey = async function (app, expires) {
     } catch (error) {
       if (error.code && error.code === 11000) {
         name = crypto.randomBytes(7).toString('hex')
-        result = new APIKey({ key: hashedKey, name, appId: app, expires })
+        result = new APIKeyModel({ key: hashedKey, name, appId: app, expires })
       } else {
         throw error
       }
@@ -103,8 +103,8 @@ APIKeyModel.newKey = async function (app, expires) {
  * @param {string} appId - The ID of the app.
  * @returns {Promise<Array>} - A promise that resolves to an array of API keys.
  */
-APIKeyModel.allKeys = async function (appId) {
-  const result = await APIKey.find({ appId }, { key: 0, __v: 0, _id: 0 }).lean().exec()
+APIKey.allKeys = async function (appId) {
+  const result = await APIKeyModel.find({ appId }, { key: 0, __v: 0, _id: 0 }).lean().exec()
   return result
 }
 
@@ -115,8 +115,8 @@ APIKeyModel.allKeys = async function (appId) {
  * @returns {Promise<Object|null>} - The revoked key object, or null if the key was not found.
  * @throws {Error} - If there was an error saving the key.
  */
-APIKeyModel.revokeKey = async function (name, appId) {
-  const key = await APIKey.findOne({ name, appId })
+APIKey.revokeKey = async function (name, appId) {
+  const key = await APIKeyModel.findOne({ name, appId })
   if (!key) return null
   key.revoked = true
   await key.save()
@@ -130,8 +130,8 @@ APIKeyModel.revokeKey = async function (name, appId) {
  * @returns {Promise<Object|null>} - A promise that resolves to the deleted API key object, or null if the key was not found.
  * @throws {Error} - If there was an error while deleting the API key.
  */
-APIKeyModel.deleteKey = async function (name, appId) {
-  const key = await APIKey.findOneAndDelete({ name, appId })
+APIKey.deleteKey = async function (name, appId) {
+  const key = await APIKeyModel.findOneAndDelete({ name, appId })
   if (!key) return null
   return key
 }
@@ -146,10 +146,10 @@ APIKeyModel.deleteKey = async function (name, appId) {
  *                               Possible values: 'API key not found', 'Invalid key',
  *                               'API key revoked', 'API key expired', 'App not found'.
  */
-APIKeyModel.verifyKey = async function (token) {
+APIKey.verifyKey = async function (token) {
   const [name, key] = token.split('_')
   const hashedKey = crypto.createHash('sha256').update(key).digest('hex')
-  const apiKey = await APIKey.findOne({ name })
+  const apiKey = await APIKeyModel.findOne({ name })
   if (!apiKey) {
     return { success: false, message: 'API key not found' }
   }
@@ -173,5 +173,5 @@ APIKeyModel.verifyKey = async function (token) {
 module.exports = {
   blacklist,
   isBlacklisted,
-  APIKeyModel
+  APIKey
 }

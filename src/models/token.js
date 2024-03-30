@@ -64,11 +64,11 @@ const APIKeySchema = new mongoose.Schema({
   }
 })
 
-const BLAccessToken = mongoose.model('BLAccessToken', BLAccessTokenSchema)
-const BLRefreshToken = mongoose.model('BLRefreshToken', BLRefreshTokenSchema)
-const APIKey = mongoose.model('APIKey', APIKeySchema)
+const BLAccessTokenModel = mongoose.model('BLAccessToken', BLAccessTokenSchema)
+const BLRefreshTokenModel = mongoose.model('BLRefreshToken', BLRefreshTokenSchema)
+const APIKeyModel = mongoose.model('APIKey', APIKeySchema)
 module.exports = {
-  BLAccessToken,
-  BLRefreshToken,
-  APIKey
+  BLAccessTokenModel,
+  BLRefreshTokenModel,
+  APIKeyModel
 }

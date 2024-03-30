@@ -1,11 +1,11 @@
-const AppService = require('../service/app')
+const App = require('../DAO/app')
 const TokenDAO = require('../DAO/token')
-const { verifyPassword, getJWTTokens, refreshTokens, generateSecret } = require('../../utils/encrypt')
+const { verifyPassword, getJWTTokens, refreshTokens } = require('../../utils/encrypt')
 const vD = require('../../utils/validate')
 const rP = require('../../utils/response')
-const { createRabbitQueue, updateRabbitQueue, deleteRabbitQueue } = require('../broker/queue')
-const channelPromise = require('../../config/rabbitmq')
-const { dbLogger, queueLogger } = require('../../utils/logger')
+// const { createRabbitQueue, updateRabbitQueue, deleteRabbitQueue } = require('../broker/queue')
+// const channelPromise = require('../../config/rabbitmq')
+const { dbLogger } = require('../../utils/logger')
 /**
  * Registers a new app.
  *
@@ -34,13 +34,13 @@ async function signup (req, res) {
     }
 
     // Create a new app in the database
-    const app = await AppService.newApp(appData)
+    const app = await App.newApp(appData)
 
-    // Get the RabbitMQ channel from the channelPromise
-    const { channel } = await channelPromise
+    // // Get the RabbitMQ channel from the channelPromise
+    // const { channel } = await channelPromise
 
-    // Create a RabbitMQ queue for the app
-    await createRabbitQueue(channel, app)
+    // // Create a RabbitMQ queue for the app
+    // await createRabbitQueue(channel, app)
 
     // Generate JWT tokens for the app
     const tokens = getJWTTokens(app)
@@ -108,7 +108,7 @@ async function login (req, res) {
     if (Object.keys(errors).length > 0) {
       return res.status(400).json(rP.getErrorResponse(400, 'App login failed', errors))
     }
-    const app = await AppService.getApp(undefined, { name })
+    const app = await App.getApp(undefined, { name })
     if (!app) {
       return res.status(404).json(rP.getErrorResponse(404, 'App not found', { lookup: [`App ${name} not found`] }))
     }
@@ -153,7 +153,7 @@ async function logout (req, res) {
       }))
     }
     if (all) {
-      await AppService.updateApp(req.app._id, { secret: generateSecret() })
+      await App.reEncrypt(req.app)
     } else {
       await TokenDAO.blacklist(req.app._id, refresh, 'refresh')
       await TokenDAO.blacklist(req.app._id, req.token, 'access')
@@ -177,10 +177,10 @@ async function logout (req, res) {
 async function getApp (req, res) {
   try {
     const app = req.app
-    delete app.__v
-    delete app.password
-    delete app.secret
-    delete app.verified
+    // delete app.__v
+    // delete app.password
+    // delete app.secret
+    // delete app.verified
     res.status(200).json(rP.getResponse(200, 'App retrieved successfully', app))
   } catch (error) {
     dbLogger.error(error)
@@ -209,16 +209,16 @@ async function patchApp (req, res) {
       return res.status(400).json(rP.getErrorResponse(400, 'App update failed', err))
     }
 
-    const updatedApp = await AppService.updateApp(app._id, updates)
+    const updatedApp = await App.updateApp(app._id, updates)
     if (!updatedApp) {
       return res.status(404).json(rP.getErrorResponse(400, 'App registration failed', {
         update: ['App not found']
       }))
     }
-    const { channel } = await channelPromise
-    if (updates.name && app.name !== updates.name) {
-      await updateRabbitQueue(channel, app.name, updatedApp.name)
-    }
+    // const { channel } = await channelPromise
+    // if (updates.name && app.name !== updates.name) {
+    //   await updateRabbitQueue(channel, app.name, updatedApp.name)
+    // }
     res.status(200).json(rP.getResponse(200, 'App updated successfully', updatedApp))
   } catch (error) {
     if ([11000, 11001].includes(error.code)) {
@@ -230,9 +230,9 @@ async function patchApp (req, res) {
         update: [error.message.split(': ')[1]]
       }))
     }
-    if (error.startsWith('QueueError')) {
-      queueLogger.error(error.message, error)
-    }
+    // if (error.startsWith('QueueError')) {
+    //   queueLogger.error(error.message, error)
+    // }
     dbLogger.error(error.message, error)
     res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {
       update: [error.message]
@@ -251,20 +251,19 @@ async function patchApp (req, res) {
 async function deleteApp (req, res) {
   try {
     const app = req.app
-    const appName = app.name
-    const deleted = await AppService.deleteApp(app._id)
+    const deleted = await App.deleteApp(app._id)
     if (!deleted) {
-      return res.status(404).json(rP.getErrorResponse(400, 'App registration failed', {
+      return res.status(404).json(rP.getErrorResponse(404, 'App deletion failed', {
         delete: ['App not found']
       }))
     }
-    const { channel } = await channelPromise
-    await deleteRabbitQueue(channel, appName)
     res.status(204).json()
+    // const { channel } = await channelPromise
+    // await deleteRabbitQueue(channel, appName)
   } catch (error) {
-    if (error.startsWith('QueueError')) {
-      queueLogger.error(error.message, error)
-    }
+    // if (error.startsWith('QueueError')) {
+    //   queueLogger.error(error.message, error)
+    // }
     dbLogger.error(error.message, error)
     res.status(500).json(rP.getErrorResponse(500, 'Internal Server Error', {
       delete: [error.message]

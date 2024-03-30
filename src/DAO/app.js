@@ -1,113 +1,116 @@
-/**
- * @file - app.js
- * @description - This file contains the AppModel class for handling database operations. It alows us to manipulate
- *              - the schema to carry out database operations
- * @requires 'mongoose' - for database operations.
- * @requires '../models/app' - for the App schema.
- * @requires '../utils/encrypt' - for encrypting the password and generating api keys.
- * @exports AppModel - as a class for handling database operations.
- */
-const App = require('../models/app')
-const Message = require('../models/message')
-const { BLAccessToken, BLRefreshToken, APIKey } = require('../models/token')
-const { encryptPassword, generateSecret } = require('../../utils/encrypt')
-const User = require('../models/user')
-/**
- * Represents the AppModel class for handling database operations.
- *
- * @class
- * @classdesc This class represents an AppModel object.
- * @param {string} name - The name of the app.
- * @param {string} email - The email of the app.
- * @param {string} password - The encrypted password of the app.
- * @param {number} notifiLimit - The notification limit of the app.
- * @param {string} secret - The secret of the app for authentication.
- */
-function AppModel (name, email, password, phone) {
-  this.name = name
-  this.email = email
-  this.password = encryptPassword(password)
-  this.phone = phone
-  this.secret = generateSecret()
-  this.verified = false
-}
-/**
- * Creates a new app.
- *
- * @param {Object} appData - The data for the app.
- * @returns {Promise<Object>} - The saved app object.
- */
-AppModel.createApp = async function (appData) {
-  const appModel = new AppModel(appData.name, appData.email, appData.password, appData.phone)
-  const app = new App(appModel)
-  const savedApp = await app.save()
-  return savedApp
-}
-/**
- * Retrieves an app based on the provided appId and filters.
- *
- * @param {string} appId - The ID of the app to retrieve.
- * @param {object} filters - Optional filters to apply when retrieving the app.
- * @returns {Promise<object>} - A promise that resolves to the retrieved app.
- */
-AppModel.getApp = async function (appId, filters) {
-  let query = {}
-  if (appId) {
-    query._id = appId
-  }
-  if (filters) {
-    query = { ...query, ...filters }
-  }
-  const app = await App.findOne(query)
-  if (!app) return null
-  return app.toObject()
-}
-/**
- * Retrieves apps based on the provided filters.
- *
- * @param {Object} filters - The filters to apply when fetching apps.
- * @returns {Promise<Array>} - A promise that resolves to an array of apps.
- * @throws {Error} - If there is an error while fetching apps.
- */
-AppModel.getApps = async function (filters) {
-  const apps = await App.find(filters, { password: 0, secret: 0, verified: 0, __v: 0 }).lean().exec()
-  return apps
-}
-/**
- * Updates apps based on the provided filters and by id.
- *
- * @param {Object} filters - The filters to apply when fetching apps.
- * @returns {Promise<Array>} - A promise that resolves to an array of apps.
- */
-AppModel.updateApp = async function (appId, appData) {
-  if (appData.password) {
-    appData.password = encryptPassword(appData.password)
-  }
+const AppModel = require('../models/app')
+const MessageModel = require('../models/message')
+const UserModel = require('../models/user')
+const webpush = require('web-push')
+const { encryptPassword, generateSecret, encrypt, decrypt } = require('../../utils/encrypt')
+const { BLAccessTokenModel, BLRefreshTokenModel, APIKeyModel } = require('../models/token')
 
-  const app = await App.findById(appId)
-  if (!app) return null
-  Object.assign(app, appData)
-  const updatedApp = await app.save()
+const App = {
+  /**
+   * Creates a new app.
+   *
+   * @param {Object} appData - The data for the app.
+   * @returns {Promise<Object>} - The saved app object.
+   */
+  async newApp (appData) {
+    delete appData.secret
+    delete appData.vapidKeys
 
-  const { secret, password, __v, verified, ...result } = updatedApp.toObject()
-  return result
-}
-
-/**
+    const appSecret = generateSecret()
+    // const hashedSecret = encrypt(appSecret, appSecret)
+    const { publicKey, privateKey } = webpush.generateVAPIDKeys()
+    const hashedpuKey = encrypt(appSecret, publicKey)
+    const hashedprKey = encrypt(appSecret, privateKey)
+    const vapidKeys = { publicKey: hashedpuKey, privateKey: hashedprKey }
+    appData.vapidKeys = vapidKeys
+    appData.secret = appSecret
+    const app = new AppModel(appData)
+    await app.save()
+    return app
+  },
+  /**
+   * Retrieves an app based on the provided appId and filters.
+   *
+   * @param {string} appId - The ID of the app to retrieve.
+   * @param {object} filters - Optional filters to apply when retrieving the app.
+   * @returns {Promise<object>} - A promise that resolves to the retrieved app.
+   */
+  async getAPP (appId, filters) {
+    let query = {}
+    if (appId) {
+      query._id = appId
+    }
+    if (filters) {
+      query = { ...query, ...filters }
+    }
+    const app = await AppModel.findOne(query)
+    if (!app) return null
+    return app
+  },
+  /**
+   * Retrieves apps based on the provided filters.
+   *
+   * @param {Object} filters - The filters to apply when fetching apps.
+   * @returns {Promise<Array>} - A promise that resolves to an array of apps.
+   * @throws {Error} - If there is an error while fetching apps.
+   */
+  async getApps (filters) {
+    const apps = await AppModel.find(filters, { password: 0, secret: 0, verified: 0, __v: 0, vapidKeys: 0 }).lean().exec()
+    return apps
+  },
+  /**
+   * Updates apps based on the provided filters and by id.
+   *
+   * @param {Object} filters - The filters to apply when fetching apps.
+   * @returns {Promise<Array>} - A promise that resolves to an array of apps.
+   */
+  async updateApp (appId, appData) {
+    if (appData.password) {
+      appData.password = encryptPassword(appData.password)
+    }
+    const app = await AppModel.findById(appId)
+    if (!app) return null
+    Object.assign(app, appData)
+    const updatedApp = await app.save()
+    const { secret, password, __v, verified, ...result } = updatedApp.toObject()
+    return result
+  },
+  /**
  * Deletes an app from the database.
  *
  * @param {string} appId - The ID of the app to be deleted.
  * @returns {Promise<Object>} - A promise that resolves to the deleted app object.
  */
-AppModel.deleteApp = async function (appId) {
-  const deletedApp = await App.findByIdAndDelete(appId)
-  if (!deletedApp) return null
-  await Message.deleteMany({ appId })
-  await BLAccessToken.deleteMany({ appId })
-  await BLRefreshToken.deleteMany({ appId })
-  await APIKey.deleteMany({ appId })
-  await User.deleteMany({ appId })
-
-  return deletedApp
+  async deleteApp (appId) {
+    const deletedApp = await AppModel.findByIdAndDelete(appId)
+    if (!deletedApp) return null
+    await MessageModel.deleteMany({ appId })
+    await BLAccessTokenModel.deleteMany({ appId })
+    await BLRefreshTokenModel.deleteMany({ appId })
+    await APIKeyModel.deleteMany({ appId })
+    await UserModel.deleteMany({ appId })
+    return deletedApp
+  },
+  decrypt (app, value) {
+    const secret = app.secret
+    return decrypt(value, secret)
+  },
+  /**
+   * reEncrypt - reencrypts all of the apps encrypted data
+   * @params app The app to be reencrypted
+   * @returns String the new secret key
+   */
+  async reEncrypt (app) {
+    const secret = app.secret
+    const { publicKey, privateKey } = app.vapidKeys
+    const spublicKey = decrypt(publicKey, secret)
+    const sprivateKey = decrypt(privateKey, secret)
+    const newSecret = generateSecret()
+    app.vapidKeys.publicKey = encrypt(spublicKey, newSecret)
+    app.vapidKeys.privateKey = encrypt(sprivateKey, newSecret)
+    app.secret = newSecret
+    await app.save()
+    return newSecret
+  }
 }
-module.exports = AppModel
+module.exports = App
