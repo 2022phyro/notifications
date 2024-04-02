@@ -12,10 +12,6 @@ const messageSchema = new mongoose.Schema({
     ref: 'App',
     required: true
   },
-  nType: {
-    type: String,
-    required: true
-  },
   userId: {
     type: String
   },

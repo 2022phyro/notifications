@@ -1,22 +1,23 @@
-const config = require('./config')
 const User = require('../../src/DAO/user')
-function sendNotification(app, message) {
-	const recipent = User.get(message.payload.userId, app._id)
-	if (!recipent) return
-	const sender = config(app)
-	User.devices.forEach(async (device) => {
-		const subscription = {
-			endpoint: device.endpoint,
-			keys: {
-				auth: device.auth
-				p256dh: device.p256dh
-			}
-		}
-		sender.sendNotification(subscription, JSON.stringify(message.notification))
-		// Update the message to success or failed
-	})
+const webpush = require('web-push')
+async function sendNotification (message, appConfig) {
+  const recipent = await User.get(message.data.userId, appConfig.id)
+  if (!recipent) return
+  recipent.devices.forEach(async (device) => {
+    const subscription = {
+      endpoint: device.endpoint,
+      keys: {
+        auth: device.auth,
+        p256dh: device.p256dh
+      }
+    }
+		// console.log(subscription)
+    webpush.setVapidDetails(appConfig.vapidDetails.subject, appConfig.vapidDetails.publicKey, appConfig.vapidDetails.privateKey)
+    const result = await webpush.sendNotification(subscription, JSON.stringify(message))
+    console.log(result.statusCode)
+  })
 }
 
 module.exports = {
-	sendNotification
-}
+  sendNotification
+ }

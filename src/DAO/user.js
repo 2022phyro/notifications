@@ -11,13 +11,13 @@ const User = {
    * @memberof User
    * @param {string} userId - The ID of the user.
    * @param {string} appId - The ID of the application.
-   * @param {string} token - The notification token.
+   * @param {string} device - The notification device.
    * @returns {Promise<Object|null>} The updated user object or null if not found.
    */
-  async subscribe (userId, appId, token) {
+  async subscribe (userId, appId, device) {
     const user = await UserModel.findOneAndUpdate(
       { dbId: userId, appId },
-      { $push: { tokens: token } },
+      { $push: { devices: device } },
       { new: true, upsert: true }
     )
     return user || null
@@ -29,13 +29,13 @@ const User = {
    * @memberof User
    * @param {string} userId - The ID of the user.
    * @param {string} appId - The ID of the application.
-   * @param {string} token - The notification token.
+   * @param {string} device - The notification device.
    * @returns {Promise<Object|null>} The updated user object or null if not found.
    */
-  async unsubscribe (userId, appId, token) {
+  async unsubscribe (userId, appId, device) {
     const user = await UserModel.findOneAndUpdate(
       { dbId: userId, appId },
-      { $pull: { tokens: token } }
+      { $pull: { devices: device } }
     )
     return user || null
   },

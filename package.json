@@ -34,6 +34,7 @@
     "pino-pretty": "^11.0.0",
     "sinon": "^17.0.1",
     "swagger-ui-express": "^5.0.0",
+    "urlsafe-base64": "^1.0.0",
     "web-push": "^3.6.7"
   },
   "devDependencies": {

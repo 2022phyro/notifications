@@ -28,6 +28,8 @@ const userSchema = new mongoose.Schema({
   }
 })
 
+userSchema.index({ dbId: 1, appId: 1 }, { unique: true })
+
 const UserModel = mongoose.model('User', userSchema)
 
 module.exports = UserModel

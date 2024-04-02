@@ -281,12 +281,12 @@ async function deleteApp (req, res) {
 async function refreshToken (req, res) {
   try {
     const { refresh } = req.body
-    const tokens = refreshTokens(refresh)
+    const tokens = await refreshTokens(refresh)
     res.status(200).json(rP.getResponse(200, 'Refresh token generated', tokens))
   } catch (error) {
-    res.status(400).json(rP.getErrorResponse(400, 'Error refreshing token'), {
+    res.status(400).json(rP.getErrorResponse(400, 'Error refreshing token', {
       refresh: [error.message]
-    })
+    }))
   }
 }
 

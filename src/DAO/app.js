@@ -55,8 +55,14 @@ const App = {
    * @returns {Promise<Array>} - A promise that resolves to an array of apps.
    * @throws {Error} - If there is an error while fetching apps.
    */
-  async getApps (filters) {
-    const apps = await AppModel.find(filters, { password: 0, secret: 0, verified: 0, __v: 0, vapidKeys: 0 }).lean().exec()
+  async getApps (filters, internal = false) {
+    internal = internal || false
+    let apps
+    if (internal) {
+      apps = await AppModel.find(filters).lean().exec()
+    } else {
+      apps = await AppModel.find(filters, { password: 0, secret: 0, verified: 0, __v: 0, vapidKeys: 0 }).lean().exec()
+    }
     return apps
   },
   /**

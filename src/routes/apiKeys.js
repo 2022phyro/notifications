@@ -9,9 +9,9 @@ const APIKeyController = require('../controllers/apiKeys')
 // Import authentication middleware
 
 // Routes
-router.post('keys', authenticateJWT, APIKeyController.createAPIKey)
-router.get('keys', authenticateJWT, APIKeyController.listAPIKeys)
-router.post('keys/:name/revoke', authenticateJWT, APIKeyController.revokeAPIKey)
-router.delete('keys/:name', authenticateJWT, APIKeyController.deleteAPIKey)
+router.post('', authenticateJWT, APIKeyController.createAPIKey)
+router.get('', authenticateJWT, APIKeyController.listAPIKeys)
+router.post('/:name/revoke', authenticateJWT, APIKeyController.revokeAPIKey)
+router.delete('/:name', authenticateJWT, APIKeyController.deleteAPIKey)
 
 module.exports = router

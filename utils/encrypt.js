@@ -91,7 +91,7 @@ async function refreshTokens (oldRefreshToken) {
 
     // Generate new tokens
     const newTokens = getJWTTokens(app)
-    await blacklist(oldRefreshToken, 'refresh')
+    await blacklist(decoded.sub, oldRefreshToken, 'refresh')
 
     return newTokens
   } catch (error) {

@@ -33,9 +33,9 @@ app.use(cors())
 app.use(helmet())
 
 app.use('/api/v1', AppRouter)
-app.use('/api/v1/app', MessageRouter)
-app.use('/api/v1/app/', APIKeyRouter)
-app.use('/api/v1/app/', UserRouter)
+app.use('/api/v1/app/messages', MessageRouter)
+app.use('/api/v1/app/keys', APIKeyRouter)
+app.use('/api/v1/app/users', UserRouter)
 app.use('/api/v1/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 app.use((err, req, res, next) => {

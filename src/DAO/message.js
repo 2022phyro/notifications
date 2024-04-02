@@ -1,7 +1,6 @@
 const MessageModel = require('../models/message')
 
 function Message (payload, data) {
-  this.nType = payload.nType
   this.appId = payload.appId
   this.userId = payload.userId
   this.value = data
@@ -9,7 +8,7 @@ function Message (payload, data) {
 
 Message.createMessage = async function (payload, data) {
   try {
-    const msgModel = new Message(payload, data)
+    const msgModel = new this(payload, data)
     const msg = new MessageModel(msgModel)
     await msg.save()
     return msg

@@ -33,7 +33,7 @@ async function handleGRPCData (call, notification) {
         details: 'The message payload is invalid'
       })
     }
-    message = JSON.stringify({ payload, fcmData: data })
+    message = JSON.stringify({ payload, notification: data })
     const { confirmChannel } = await channelPromise
     await scheduleMessage(confirmChannel, message)
     call.write({ success: true, message: 'Message successfully delivered' })

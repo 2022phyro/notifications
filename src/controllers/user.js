@@ -6,9 +6,9 @@ const { dbLogger } = require('../../utils/logger')
 async function subscribe (req, res) {
   try {
     const { userId } = req.params
-    const tokens = req.body
-    vD.validateSchema(tokens, vD.subscriptionSchema)
-    const user = await User.subscribe(userId, req.app._id, tokens)
+    const device = req.body
+    vD.validateSchema(device, vD.subscriptionSchema)
+    const user = await User.subscribe(userId, req.app._id, device)
     if (!user) {
       return res
         .status(400)
@@ -17,7 +17,7 @@ async function subscribe (req, res) {
     return res.status(200).json(rP.getResponse(200, 'User subscribed', {
       _id: user._id,
       dbId: user.dbId,
-      deviceCount: user.tokens.length
+      deviceCount: user.devices.length
     }))
   } catch (err) {
     if (err.message.startsWith('Validation failed:')) {
@@ -39,10 +39,10 @@ async function subscribe (req, res) {
 
 async function unsubscribe (req, res) {
   try {
-    const tokens = req.body
+    const device = req.body
     const { userId } = req.params
-    vD.validateSchema(tokens, vD.subscriptionSchema)
-    const user = await User.unsubscribe(userId, req.app._id, tokens)
+    vD.validateSchema(device, vD.subscriptionSchema)
+    const user = await User.unsubscribe(userId, req.app._id, device)
     if (!user) {
       return res
         .status(404)
@@ -51,7 +51,7 @@ async function unsubscribe (req, res) {
     return res.status(200).json(rP.getResponse(200, 'User unsubscribed', {
       _id: user._id,
       dbId: user.dbId,
-      deviceCount: user.tokens.length
+      deviceCount: user.devices.length
     }))
   } catch (error) {
     if (error.message.startsWith('Validation failed:')) {
@@ -102,7 +102,7 @@ async function getUser (req, res) {
     return res.status(200).json(rP.getResponse(200, 'User retrieved', {
       _id: user._id,
       dbId: user.dbId,
-      deviceCount: user.tokens.length
+      deviceCount: user.devices.length
     }))
   } catch (error) {
     dbLogger.error(error)

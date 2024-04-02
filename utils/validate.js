@@ -11,35 +11,26 @@ const fcmSchema = {
     payload: {
       type: 'object',
       properties: {
-        appid: { type: 'string' },
-        nType: { type: 'string' },
+        appId: { type: 'string' },
         userId: { type: 'string' }
 
       }
     },
-    fcmData: {
+    notification: {
       type: 'object',
       properties: {
         name: { type: 'string' },
         data: { type: 'object' },
-        notification: { type: 'object' },
-        android: { type: 'object' },
-        webpush: { type: 'object' },
-        apns: { type: 'object' },
-        fcm_options: { type: 'object' },
-        token: { type: 'string' },
-        topic: { type: 'string' },
-        condition: { type: 'string' }
+        title: { type: 'string' },
+        body: { type: 'string' },
+        imgUrl: { type: 'string' },
+        clickUrl: { type: 'string' }
       },
-      oneOf: [
-        { required: ['token'] },
-        { required: ['topic'] },
-        { required: ['condition'] }
-      ],
-      required: ['notification', 'name']
+      required: ['title', 'body']
     }
   },
-  required: ['payload', 'fcmData']
+  additionalProperties: false,
+  required: ['payload', 'notification']
 }
 
 const appSchema = {
@@ -50,7 +41,9 @@ const appSchema = {
     password: { type: 'string' },
     phone: { type: 'string', maxLength: 20 }
   },
-  required: ['name', 'email', 'password', 'phone']
+  required: ['name', 'email', 'password', 'phone'],
+  additionalProperties: false
+
 }
 
 const appUpdateSchema = {
