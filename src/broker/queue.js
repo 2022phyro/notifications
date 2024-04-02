@@ -31,7 +31,13 @@ async function updateRabbitQueue (channel, appName, newAppName) {
     queueLogger.error(error)
   }
 }
-
+async function checkQueue (channel, queue) {
+  try {
+    await channel.checkQueue(queue)
+  } catch {
+    await channel.assertQueue(queue)
+  }
+}
 async function deleteRabbitQueue (channel, appName) {
   try {
     await channel.deleteQueue(appName)
@@ -84,5 +90,6 @@ module.exports = {
   createRabbitQueue,
   deleteRabbitQueue,
   updateRabbitQueue,
-  sendToQueue
+  sendToQueue,
+  checkQueue
 }

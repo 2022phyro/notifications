@@ -6,8 +6,8 @@
     "test": "mocha './test/**/*.test.js'",
     "lint": "eslint .",
     "fix": "eslint . --fix",
-    "dev": "nodemon index.js",
-    "dev-worker": "nodemon src/gRPC/server.js"
+    "dev": "node index.js",
+    "dev-worker": "node src/gRPC/server.js"
   },
   "keywords": [],
   "author": "",

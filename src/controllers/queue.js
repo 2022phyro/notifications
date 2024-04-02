@@ -40,6 +40,7 @@ async function startConsuming () {
 
 async function startSending () {
   const queue = process.env.FCM_QUEUE
+  await broker.checkQueue(queue)
   const { channel } = await channelPromise
   const apps = await App.getApps({}, true)
   const appsConfig = apps.map(app => ({
@@ -58,22 +59,7 @@ async function startSending () {
     }
   })
 }
-// async function startSending () {
-//   const queue = process.env.FCM_QUEUE
 
-//   const { channel } = await channelPromise
-//   await broker.consumeMessage(channel, queue, async (message) => {
-//     try {
-//       if (message instanceof Error) throw message
-//       const msg = JSON.parse(message)
-//       queueLogger.info(`Message ${msg._id} successfully received`)
-//       console.log(msg)
-//       // sendMessage(msg)
-//     } catch (error) {
-//       queueLogger.error('Error sending message' + error)
-//     }
-//   })
-// }
 module.exports = {
   scheduleMessage,
   startConsuming,
