@@ -11,7 +11,7 @@ async function sendNotification (message, appConfig) {
         p256dh: device.p256dh
       }
     }
-		// console.log(subscription)
+    // console.log(subscription)
     webpush.setVapidDetails(appConfig.vapidDetails.subject, appConfig.vapidDetails.publicKey, appConfig.vapidDetails.privateKey)
     const result = await webpush.sendNotification(subscription, JSON.stringify(message))
     console.log(result.statusCode)
@@ -20,4 +20,4 @@ async function sendNotification (message, appConfig) {
 
 module.exports = {
   sendNotification
- }
+}
