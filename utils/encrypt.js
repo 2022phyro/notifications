@@ -59,8 +59,8 @@ function getJWTTokens (app) {
     iat: Math.floor(Date.now() / 1000) // current time in seconds since the epoch
   }
 
-  const accessToken = jwt.sign({ ...payload, type: 'access' }, app.secret, { expiresIn: '1h', algorithm: 'HS256' })
-  const refreshToken = jwt.sign({ ...payload, type: 'refresh' }, app.secret, { expiresIn: '7d', algorithm: 'HS256' })
+  const accessToken = jwt.sign({ ...payload, type: 'access' }, app.secret.slice(0, 16), { expiresIn: '1h', algorithm: 'HS256' })
+  const refreshToken = jwt.sign({ ...payload, type: 'refresh' }, app.secret.slice(0, 16), { expiresIn: '7d', algorithm: 'HS256' })
 
   return { accessToken, refreshToken }
 }
@@ -87,7 +87,7 @@ async function refreshTokens (oldRefreshToken) {
       throw new Error('App not found')
     }
     // Verify the old refresh token
-    jwt.verify(oldRefreshToken, app.secret, { algorithms: ['HS256'] })
+    jwt.verify(oldRefreshToken, app.secret.slice(0, 16), { algorithms: ['HS256'] })
 
     // Generate new tokens
     const newTokens = getJWTTokens(app)

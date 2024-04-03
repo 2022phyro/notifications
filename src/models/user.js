@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   },
   devices: [
     {
+      _id: false,
       endpoint: {
         type: String,
         required: true

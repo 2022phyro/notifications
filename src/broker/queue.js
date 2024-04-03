@@ -11,31 +11,20 @@ async function createRabbitQueue (channel, app) {
 
 async function updateRabbitQueue (channel, appName, newAppName) {
   try {
-    // Create a new queue with the new name
     await channel.checkQueue(appName)
     await channel.assertQueue(newAppName)
-    // Move messages from the old queue to the new one
     await channel.consume(appName, (msg) => {
       if (msg !== null) {
         channel.sendToQueue(newAppName, msg.content)
         channel.ack(msg)
       }
     }, { noAck: false })
-
-    // Delete the old queue
     await channel.deleteQueue(appName)
 
     queueLogger.info(`Queue ${appName} updated to ${newAppName}`)
   } catch (error) {
     error.message = 'QueueError: ' + error.message
     queueLogger.error(error)
-  }
-}
-async function checkQueue (channel, queue) {
-  try {
-    await channel.checkQueue(queue)
-  } catch {
-    await channel.assertQueue(queue)
   }
 }
 async function deleteRabbitQueue (channel, appName) {
@@ -90,6 +79,5 @@ module.exports = {
   createRabbitQueue,
   deleteRabbitQueue,
   updateRabbitQueue,
-  sendToQueue,
-  checkQueue
+  sendToQueue
 }

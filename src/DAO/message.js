@@ -18,7 +18,8 @@ Message.createMessage = async function (payload, data) {
   }
 }
 
-Message.getMessage = async function (msgId, filters) {
+Message.getMessage = async function (msgId, filters, internal) {
+  internal = internal || false
   let query = {}
   try {
     if (msgId) {
@@ -29,7 +30,7 @@ Message.getMessage = async function (msgId, filters) {
     }
     const msg = await MessageModel.findOne(query)
     if (!msg) return null
-    return msg.toObject()
+    return internal ? msg : msg.toObject()
   } catch (error) {
     console.error('Error while getting message', error)
     throw error

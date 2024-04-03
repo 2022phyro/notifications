@@ -92,6 +92,7 @@ async function login (req, res) {
   const errors = {}
   try {
     const { name, password } = req.body
+    console.log(req.body)
     if (!name || !password) {
       return res.status(400).json(rP.getErrorResponse(400, 'App login failed', {
         login: ['Must provide name and password']

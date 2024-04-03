@@ -1,0 +1,58 @@
+const User = require('../../src/DAO/user')
+const webpush = require('web-push')
+
+async function success(msg) {
+  // Mark the message as successful
+}
+
+async function reschedule(msg) {
+  // Reschedule the message
+}
+
+async function sendNotification (message, appConfig) {
+  try {
+    const recipent = await User.get(message.data.userId, appConfig.id)
+    if (!recipent) return
+
+    recipent.devices.forEach(async (device) => {
+      const subscription = {
+        endpoint: device.endpoint,
+        keys: {
+          auth: device.auth,
+          p256dh: device.p256dh
+        }
+      }
+
+      webpush.setVapidDetails(appConfig.vapidDetails.subject, appConfig.vapidDetails.publicKey, appConfig.vapidDetails.privateKey)
+
+      // Set a timeout for the sendNotification function
+      const timeout = new Promise((resolve, reject) => {
+        const id = setTimeout(() => {
+          clearTimeout(id)
+          reject('Timed out in 5000ms.')
+        }, 5000)
+      })
+
+      // Create a promise that represents the sendNotification function
+      const send = webpush.sendNotification(subscription, JSON.stringify(message))
+
+      // Use Promise.race to race the timeout against the sendNotification function
+      Promise.race([send, timeout]).then(result => {
+        console.log(result.statusCode)
+        success(message) // Call success function if notification is sent successfully
+      }).catch(async (err) => {
+        console.error(err)
+        if (err.code === 'ETIMEDOUT' || err.name === 'WebPushError') {
+          // Retry the sendNotification function if there is a timeout or a WebPushError
+          await reschedule(message) // Call reschedule function if sending notification fails or times out
+        }
+      })
+    })
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+module.exports = {
+  sendNotification
+}

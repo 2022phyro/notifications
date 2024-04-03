@@ -23,13 +23,14 @@ const fcmSchema = {
         data: { type: 'object' },
         title: { type: 'string' },
         body: { type: 'string' },
-        imgUrl: { type: 'string' },
-        clickUrl: { type: 'string' }
+        icon: { type: 'string' },
+        clickUrl: { type: 'string' },
+        badge: { type: 'number' }
       },
       required: ['title', 'body']
     }
   },
-  additionalProperties: false,
+  // additionalProperties: false,
   required: ['payload', 'notification']
 }
 

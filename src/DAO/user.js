@@ -17,7 +17,7 @@ const User = {
   async subscribe (userId, appId, device) {
     const user = await UserModel.findOneAndUpdate(
       { dbId: userId, appId },
-      { $push: { devices: device } },
+      { $addToSet: { devices: device } },
       { new: true, upsert: true }
     )
     return user || null
