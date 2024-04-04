@@ -61,9 +61,10 @@ const User = {
    * @param {string} appId - The ID of the application.
    * @returns {Promise<Object|null>} The user object or null if not found.
    */
-  async get (userId, appId) {
+  async get (userId, appId, internal) {
     const user = await UserModel.findOne({ dbId: userId, appId })
     if (!user) return null
+    if (internal) return user
     const result = user.toObject()
     delete result.__v
     return result

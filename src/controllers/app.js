@@ -279,10 +279,24 @@ async function deleteApp (req, res) {
  * @param {Object} res - The response object.
  * @returns {Promise<void>} - A promise that resolves when the token is refreshed.
  */
+// async function refreshToken (req, res) {
+//   try {
+//     const { refresh } = req.body
+//     const tokens = await refreshTokens(refresh)
+//     res.status(200).json(rP.getResponse(200, 'Refresh token generated', tokens))
+//   } catch (error) {
+//     res.status(400).json(rP.getErrorResponse(400, 'Error refreshing token', {
+//       refresh: [error.message]
+//     }))
+//   }
+// }
 async function refreshToken (req, res) {
   try {
+    // const refresh = req.cookies.refresh
     const { refresh } = req.body
+    console.log(refresh)
     const tokens = await refreshTokens(refresh)
+    // Set the new refresh token in an HttpOnly cookie
     res.status(200).json(rP.getResponse(200, 'Refresh token generated', tokens))
   } catch (error) {
     res.status(400).json(rP.getErrorResponse(400, 'Error refreshing token', {

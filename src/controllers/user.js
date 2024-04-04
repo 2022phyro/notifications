@@ -1,23 +1,34 @@
 const User = require('../DAO/user')
+const App = require('../DAO/app')
 const rP = require('../../utils/response')
 const vD = require('../../utils/validate')
 const { dbLogger } = require('../../utils/logger')
+const { getJWTTokens } = require('../../utils/encrypt')
 
 async function subscribe (req, res) {
   try {
     const { userId } = req.params
-    const device = req.body
+    const { payload, ...device } = req.body
     vD.validateSchema(device, vD.subscriptionSchema)
-    const user = await User.subscribe(userId, req.app._id, device)
+    const app = await App.getApp(undefined, { name: payload.appName })
+    if (!app || App.decrypt(app, app.vapidKeys.publicKey) !== payload.publicKey) {
+      return res
+        .status(404)
+        .json(rP.getErrorResponse(404, 'User subscription failed', { subscribe: ['App not found'] }))
+    }
+    const user = await User.subscribe(userId, app._id, device)
+    // res.cookie('user_refresh', tokens.refreshToken, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 })
     if (!user) {
       return res
         .status(400)
         .json(rP.getErrorResponse(400, 'User subscription failed', { subscribe: ["User couldn't be subscribed"] }))
     }
+    const tokens = getJWTTokens(app)
     return res.status(200).json(rP.getResponse(200, 'User subscribed', {
       _id: user._id,
       dbId: user.dbId,
-      deviceCount: user.devices.length
+      deviceCount: user.devices.length,
+      tokens
     }))
   } catch (err) {
     if (err.message.startsWith('Validation failed:')) {

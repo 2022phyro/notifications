@@ -10,7 +10,7 @@ async function success (msg) {
 async function reschedule (msg, appConfig) {
   const message = await Message.getMessage(msg.data._id, {}, true)
   if (!message) return
-  if (message.retries === 2) {
+  if (message.retries === 1) {
     message.status = 'FAILED'
   } else {
     message.retries = message.retries + 1
@@ -25,9 +25,11 @@ async function reschedule (msg, appConfig) {
 }
 async function sendNotification (message, appConfig) {
   try {
-    const recipent = await User.get(message.data.userId, appConfig.id)
+    const recipent = await User.get(message.data.userId, appConfig.id, true)
     if (!recipent) return
-    const promises = recipent.devices.map(async (device) => {
+
+    const errors = []
+    for (const device of recipent.devices) {
       const subscription = {
         endpoint: device.endpoint,
         keys: {
@@ -36,27 +38,26 @@ async function sendNotification (message, appConfig) {
         }
       }
       webpush.setVapidDetails(appConfig.vapidDetails.subject, appConfig.vapidDetails.publicKey, appConfig.vapidDetails.privateKey)
-      const timeout = new Promise((resolve, reject) => {
-        const id = setTimeout(() => {
-          clearTimeout(id)
-          const err = new Error('Timed out in 5000ms.')
-          err.code = 'ETIMEDOUT'
-          reject(err)
-        }, 5000)
-      })
-
-      const send = webpush.sendNotification(subscription, JSON.stringify(message))
-      return Promise.race([send, timeout]).then(async (result) => {
+      try {
+        const result = await webpush.sendNotification(subscription, JSON.stringify(message))
         webpushLogger.info(`${result.statusCode} - Message ${message.data._id} sent to location ${result.headers.location}`)
-        await success(message)
-      }).catch(async (err) => {
+      } catch (err) {
         webpushLogger.error(err)
         if ((err.code && err.code === 'ETIMEDOUT') || (err.name && err.name === 'WebPushError')) {
-          await reschedule(message, appConfig)
+          errors.push(device)
         }
-      })
-    })
-    return Promise.all(promises)
+        if ([410, 404].includes(err.statusCode)) {
+          recipent.devices = recipent.devices.filter((d) => d.endpoint !== device.endpoint)
+        }
+      }
+    }
+
+    if (errors.length > 0) {
+      //reschedule
+    } else {
+      await success(message)
+    }
+    await recipent.save()
   } catch (err) {
     webpushLogger.error(err)
   }

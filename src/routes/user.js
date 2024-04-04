@@ -6,7 +6,7 @@ const router = express.Router()
 router.get('/:userId', authenticateJWT, UserController.getUser)
 router.delete('/:userId', authenticateJWT, UserController.deleteUser)
 router.post('/:userId/unsubscribe', authenticateJWT, UserController.unsubscribe)
-router.post('/:userId/subscribe', authenticateJWT, UserController.subscribe)
+router.post('/:userId/subscribe', UserController.subscribe)
 // router.delete('/app/user', authenticateJWT, UserController.deleteAllUsers)
 
 module.exports = router

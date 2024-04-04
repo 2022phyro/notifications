@@ -53,6 +53,10 @@ function generateSecret (length = 16) {
  * @returns {string} - The refresh token.
  */
 function getJWTTokens (app) {
+  const issuedAt = Math.floor(Date.now() / 1000) // current time in seconds since the epoch
+  const accessTokenExpiry = issuedAt + 60 * 60 // 1 hour from now
+  const refreshTokenExpiry = issuedAt + 60 * 60 * 24 * 7 // 7 days from now
+
   const payload = {
     sub: app._id,
     appName: app.name,
@@ -62,7 +66,14 @@ function getJWTTokens (app) {
   const accessToken = jwt.sign({ ...payload, type: 'access' }, app.secret.slice(0, 16), { expiresIn: '1h', algorithm: 'HS256' })
   const refreshToken = jwt.sign({ ...payload, type: 'refresh' }, app.secret.slice(0, 16), { expiresIn: '7d', algorithm: 'HS256' })
 
-  return { accessToken, refreshToken }
+  return {
+    accessToken,
+    refreshToken,
+    access_iat: new Date(issuedAt * 1000).toISOString(),
+    refresh_iat: new Date(issuedAt * 1000).toISOString(),
+    access_exp: new Date(accessTokenExpiry * 1000).toISOString(),
+    refresh_exp: new Date(refreshTokenExpiry * 1000).toISOString()
+  }
 }
 
 /**
