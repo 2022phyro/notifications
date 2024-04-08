@@ -4,6 +4,7 @@ const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
+const cookieParser = require('cookie-parser')
 const swaggerUi = require('swagger-ui-express')
 const YAML = require('js-yaml')
 const fs = require('fs')
@@ -30,8 +31,18 @@ app.use(expressLogger)
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 app.use(helmet())
+app.use(cookieParser())
 app.use(helmet())
-app.use(cors())
+// app.use(cors(["http://localhost:5173"]))
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin
+    // (like mobile apps or curl requests)
+    if (!origin) return callback(null, true)
+    callback(null, origin)
+  },
+  credentials: true
+}))
 
 app.use('/api/v1', AppRouter)
 app.use('/api/v1/app/messages', MessageRouter)

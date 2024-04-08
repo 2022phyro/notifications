@@ -250,6 +250,30 @@ paths:
                 $ref: '#/components/schemas/DefaultError'
 
   /app/messages:
+    post:
+      tags: [message]
+      security:
+        - api_key: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: '#/components/schemas/FcmSchema'
+      responses:
+        200:
+          description: Message created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        400:
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultError'
     get:
       tags: [message]
       security:
@@ -1103,7 +1127,39 @@ components:
               description: The number of devices the users has subscribed to the service
               examples:
                 - 3
-
+    FcmSchema:
+      type: object
+      required:
+        - payload
+        - notification
+      properties:
+        payload:
+          type: object
+          properties:
+            appId:
+              type: string
+            userId:
+              type: string
+        notification:
+          type: object
+          required:
+            - title
+            - body
+          properties:
+            name:
+              type: string
+            data:
+              type: object
+            title:
+              type: string
+            body:
+              type: string
+            icon:
+              type: string
+            clickUrl:
+              type: string
+            badge:
+              type: integer
   securitySchemes:
     api_key:
       type: apiKey

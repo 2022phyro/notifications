@@ -21,6 +21,7 @@ async function scheduleMessage (channel, msg) {
       queueLogger.error(err)
     } else {
       queueLogger.info(` Message ${newMsg._id} successfully sent to queue`)
+      return newMsg
     }
   } catch (error) {
     queueLogger.error('Error scheduling message: ' + error)

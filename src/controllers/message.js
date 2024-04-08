@@ -1,7 +1,8 @@
 // Import any required modules or dependencies
 const Message = require('../DAO/message')
 const rP = require('../../utils/response')
-
+const { scheduleMessage } = require('./queue')
+const channelPromise = require('../../config/rabbitmq')
 async function getMessages (req, res) {
   try {
     const app = req.app
@@ -79,11 +80,26 @@ async function markAsRead (req, res) {
     res.status(400).json(rP.getErrorResponse(500, 'Message update failed', { markMessageAsRead: [error.message] }))
   }
 }
+
+async function newMessage (req, res) {
+  // Implement logic to create a new message
+  try {
+    const message = req.body
+    const { channel } = await channelPromise
+    const success = await scheduleMessage(channel, message)
+    delete success.value
+    delete success.__v
+    res.status(201).json(rP.getResponse(201, 'Notification sent successfully', success))
+  } catch (error) {
+    res.status(500).json(rP.getErrorResponse(500, 'Message creation failed', { newMessage: [error.message] }))
+  }
+}
 // Export the controller functions
 module.exports = {
   getMessages,
   getMessage,
   deleteAllMessages,
   deleteMessage,
-  markAsRead
+  markAsRead,
+  newMessage
 }

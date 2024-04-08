@@ -50,7 +50,7 @@ async function signup (req, res) {
       appId: app._id,
       name: app.name
     }
-
+    res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE), httpOnly: true })
     // Return a 201 response with the registration success message and the response data
     return res
       .status(201)
@@ -115,6 +115,8 @@ async function login (req, res) {
       return res.status(401).json(rP.getErrorResponse(401, 'App login failed', { login: ['Invalid password'] }))
     }
     const tokens = getJWTTokens(app)
+    res.clearCookie('refresh')
+    res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE), httpOnly: true })
     const data = {
       tokens,
       appId: app._id,
@@ -140,10 +142,11 @@ async function login (req, res) {
  */
 async function logout (req, res) {
   try {
-    const { refresh, all } = req.body
+    const { all } = req.body
+    const refresh = req.cookies.refresh
     if (!(refresh || (refresh && all))) {
       return res.status(400).json(rP.getErrorResponse(400, 'Logout failed', {
-        logout: ['Must provide refresh token and all']
+        logout: ['Refresh token not found']
       }))
     }
     if (await TokenDAO.isBlacklisted(refresh, 'refresh')) {
@@ -157,6 +160,7 @@ async function logout (req, res) {
       await TokenDAO.blacklist(req.app._id, refresh, 'refresh')
       await TokenDAO.blacklist(req.app._id, req.token, 'access')
     }
+    res.clearCookie('refresh')
     res.status(204).json()
   } catch (error) {
     dbLogger.error(error)
@@ -279,24 +283,12 @@ async function deleteApp (req, res) {
  * @param {Object} res - The response object.
  * @returns {Promise<void>} - A promise that resolves when the token is refreshed.
  */
-// async function refreshToken (req, res) {
-//   try {
-//     const { refresh } = req.body
-//     const tokens = await refreshTokens(refresh)
-//     res.status(200).json(rP.getResponse(200, 'Refresh token generated', tokens))
-//   } catch (error) {
-//     res.status(400).json(rP.getErrorResponse(400, 'Error refreshing token', {
-//       refresh: [error.message]
-//     }))
-//   }
-// }
 async function refreshToken (req, res) {
   try {
-    // const refresh = req.cookies.refresh
-    const { refresh } = req.body
-    console.log(refresh)
+    const refresh = req.cookies.refresh
+    res.clearCookie('refresh')
     const tokens = await refreshTokens(refresh)
-    // Set the new refresh token in an HttpOnly cookie
+    res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE), httpOnly: true }) // Add htttpOnly later on
     res.status(200).json(rP.getResponse(200, 'Refresh token generated', tokens))
   } catch (error) {
     res.status(400).json(rP.getErrorResponse(400, 'Error refreshing token', {
