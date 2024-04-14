@@ -1,9 +1,6 @@
 const AppModel = require('../models/app')
-const MessageModel = require('../models/message')
-const UserModel = require('../models/user')
 const webpush = require('web-push')
 const { encryptPassword, generateSecret, encrypt, decrypt } = require('../../utils/encrypt')
-const { BLAccessTokenModel, BLRefreshTokenModel, APIKeyModel } = require('../models/token')
 
 const App = {
   /**
@@ -12,19 +9,17 @@ const App = {
    * @param {Object} appData - The data for the app.
    * @returns {Promise<Object>} - The saved app object.
    */
-  async newApp (appData) {
+  async newApp (appData, org) {
     delete appData.secret
     delete appData.vapidKeys
 
-    const appSecret = generateSecret(32)
     if (appData.password) appData.password = encryptPassword(appData.password)
-    // const hashedSecret = encrypt(appSecret, appSecret)
     const { publicKey, privateKey } = webpush.generateVAPIDKeys()
-    const hashedpuKey = encrypt(publicKey, appSecret)
-    const hashedprKey = encrypt(privateKey, appSecret)
+    const hashedpuKey = encrypt(publicKey, org.secret)
+    const hashedprKey = encrypt(privateKey, org.secret)
     const vapidKeys = { publicKey: hashedpuKey, privateKey: hashedprKey }
     appData.vapidKeys = vapidKeys
-    appData.secret = appSecret
+    appData.secret = org.secret
     const app = new AppModel(appData)
     await app.save()
     return app
@@ -89,17 +84,13 @@ const App = {
  * @returns {Promise<Object>} - A promise that resolves to the deleted app object.
  */
   async deleteApp (appId) {
-    const deletedApp = await AppModel.findByIdAndDelete(appId)
+    const deletedApp = await AppModel.findOneAndRemove({ _id: appId })
     if (!deletedApp) return null
-    await MessageModel.deleteMany({ appId })
-    await BLAccessTokenModel.deleteMany({ appId })
-    await BLRefreshTokenModel.deleteMany({ appId })
-    await APIKeyModel.deleteMany({ appId })
-    await UserModel.deleteMany({ appId })
+
     return deletedApp
   },
-  decrypt (app, value) {
-    const secret = app.secret
+  decrypt (org, value) {
+    const secret = org.secret
     return decrypt(value, secret)
   },
   /**

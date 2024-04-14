@@ -8,7 +8,8 @@ const cookieParser = require('cookie-parser')
 const swaggerUi = require('swagger-ui-express')
 const YAML = require('js-yaml')
 const fs = require('fs')
-const AppRouter = require('./src/routes/app')
+// const AppRouter = require('./src/routes/app')
+const OrgRouter = require('./src/routes/org')
 const MessageRouter = require('./src/routes/message')
 const APIKeyRouter = require('./src/routes/apiKeys')
 const UserRouter = require('./src/routes/user')
@@ -44,7 +45,7 @@ app.use(cors({
   credentials: true
 }))
 
-app.use('/api/v1', AppRouter)
+app.use('/api/v1', OrgRouter)
 app.use('/api/v1/app/messages', MessageRouter)
 app.use('/api/v1/app/keys', APIKeyRouter)
 app.use('/api/v1/app/users', UserRouter)

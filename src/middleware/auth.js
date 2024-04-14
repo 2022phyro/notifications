@@ -1,9 +1,11 @@
 const jwt = require('jsonwebtoken')
+const Org = require('../DAO/org')
 const App = require('../DAO/app')
 const TokenDAO = require('../DAO/token')
 const { getErrorResponse } = require('../../utils/response')
 
 async function authenticateJWT (req, res, next) {
+  const { appId } = req.params
   const authHeader = req.headers.authorization
   if (authHeader) {
     const [bearer, token] = authHeader.split(' ')
@@ -19,17 +21,26 @@ async function authenticateJWT (req, res, next) {
       const decoded = jwt.decode(token)
 
       // Get the app
-      const app = await App.getApp(decoded.sub)
-      if (!app) {
-        return res.status(401).json(getErrorResponse(401, 'Authentication failed', { auth: ['App not found'] }))
+      const org = await Org.get(decoded.sub)
+      if (!org) {
+        return res.status(401).json(getErrorResponse(401, 'Authentication failed', { auth: ['Organization not found'] }))
       }
       // Verify the token with the app's secret
-      jwt.verify(token, app.secret.slice(0, 16), { algorithms: ['HS256'] })
+      jwt.verify(token, org.secret.slice(0, 16), { algorithms: ['HS256'] })
       // Add the app to the request
-      req.app = app
+      req.org = org
       req.token = token
+      if (appId) {
+        const app = await App.getApp(appId)
+        if (!app) {
+          return res.status(401).json(getErrorResponse(404, 'Not found', { auth: ['App not found'] }))
+        }
+        req.app = app
+      }
+
       next()
     } catch (error) {
+      console.error(error)
       return res.status(401).json(getErrorResponse(401, 'Authentication failed', { auth: ['Invalid token'] }))
     }
   } else {

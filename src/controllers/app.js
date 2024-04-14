@@ -18,7 +18,7 @@ const { dbLogger } = require('../../utils/logger')
  * @throws {Error} - If the app data validation fails.
  * @throws {Error} - If there is an internal server error.
  */
-async function signup (req, res) {
+async function newApp (req, res) {
   try {
     const appData = req.body
 
@@ -81,96 +81,6 @@ async function signup (req, res) {
 }
 
 /**
- * Logs in the user with the provided credentials.
- *
- * @param {Object} req - The request object.
- * @param {Object} res - The response object.
- * @returns {Promise<void>} - A promise that resolves when the login process is complete.
- * @throws {Error} - If an error occurs during the login process.
- */
-async function login (req, res) {
-  const errors = {}
-  try {
-    const { name, password } = req.body
-    console.log(req.body)
-    if (!name || !password) {
-      return res.status(400).json(rP.getErrorResponse(400, 'App login failed', {
-        login: ['Must provide name and password']
-      }))
-    }
-
-    const [stat, err] = vD.validateName(name)
-    if (!stat) errors.name = err
-    const [lstat, err2] = vD.validatePwd(password)
-    if (!lstat) errors.password = err2
-
-    if (Object.keys(errors).length > 0) {
-      return res.status(400).json(rP.getErrorResponse(400, 'App login failed', errors))
-    }
-    const app = await App.getApp(undefined, { name })
-    if (!app) {
-      return res.status(404).json(rP.getErrorResponse(404, 'App not found', { lookup: [`App ${name} not found`] }))
-    }
-    if (!verifyPassword(password, app.password)) {
-      return res.status(401).json(rP.getErrorResponse(401, 'App login failed', { login: ['Invalid password'] }))
-    }
-    const tokens = getJWTTokens(app)
-    res.clearCookie('refresh')
-    res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE), httpOnly: true })
-    const data = {
-      tokens,
-      appId: app._id,
-      name: app.name
-    }
-    res.status(200).json(rP.getResponse(200, 'App login successful', data))
-  } catch (error) {
-    dbLogger.error(error)
-    res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {
-      signup: [error.message]
-    }))
-  }
-}
-
-/**
- * Logs out the user by blacklisting the provided refresh token and access token.
- * If the 'all' parameter is true, it also generates a new secret for the app.
- *
- * @param {Object} req - The request object.
- * @param {Object} res - The response object.
- * @returns {Promise<void>} - A promise that resolves when the logout process is complete.
- * @throws {Error} - If an error occurs during the logout process.
- */
-async function logout (req, res) {
-  try {
-    const { all } = req.body
-    const refresh = req.cookies.refresh
-    if (!(refresh || (refresh && all))) {
-      return res.status(400).json(rP.getErrorResponse(400, 'Logout failed', {
-        logout: ['Refresh token not found']
-      }))
-    }
-    if (await TokenDAO.isBlacklisted(refresh, 'refresh')) {
-      return res.status(400).json(rP.getErrorResponse(400, 'Logout failed', {
-        logout: ['Token is blacklisted']
-      }))
-    }
-    if (all) {
-      await App.reEncrypt(req.app)
-    } else {
-      await TokenDAO.blacklist(req.app._id, refresh, 'refresh')
-      await TokenDAO.blacklist(req.app._id, req.token, 'access')
-    }
-    res.clearCookie('refresh')
-    res.status(204).json()
-  } catch (error) {
-    dbLogger.error(error)
-    res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {
-      logout: [error.message]
-    }))
-  }
-}
-
-/**
  * Retrieves an app.
  *
  * @param {Object} req - The request object.
@@ -195,6 +105,23 @@ async function getApp (req, res) {
   }
 }
 
+async function getApps (req, res) {
+  try {
+    const app = req.app.toObject()
+    app.VAPIDKey = App.decrypt(app, app.vapidKeys.publicKey)
+    // delete app.__v
+    // delete app.password
+    // delete app.secret
+    // delete app.verified
+    const { secret, __v, password, verified, vapidKeys, ...result } = app
+    res.status(200).json(rP.getResponse(200, 'App retrieved successfully', result))
+  } catch (error) {
+    dbLogger.error(error)
+    res.status(400).json(rP.getErrorResponse(500, 'Internal Server Error', {
+      lookup: [error.message]
+    }))
+  }
+}
 /**
  * Updates an app with the provided data.
  *
@@ -276,33 +203,11 @@ async function deleteApp (req, res) {
   }
 }
 
-/**
- * Refreshes the access token using the provided refresh token.
- *
- * @param {Object} req - The request object.
- * @param {Object} res - The response object.
- * @returns {Promise<void>} - A promise that resolves when the token is refreshed.
- */
-async function refreshToken (req, res) {
-  try {
-    const refresh = req.cookies.refresh
-    res.clearCookie('refresh')
-    const tokens = await refreshTokens(refresh)
-    res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE), httpOnly: true }) // Add htttpOnly later on
-    res.status(200).json(rP.getResponse(200, 'Refresh token generated', tokens))
-  } catch (error) {
-    res.status(400).json(rP.getErrorResponse(400, 'Error refreshing token', {
-      refresh: [error.message]
-    }))
-  }
-}
 
 module.exports = {
-  signup,
-  login,
-  logout,
+  newApp,
   getApp,
   patchApp,
   deleteApp,
-  refreshToken
+  getApps
 }

@@ -5,9 +5,9 @@ const BLAccessTokenSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  appId: {
+  orgId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'App',
+    ref: 'Org',
     required: true
   },
   created: {
@@ -22,9 +22,9 @@ const BLRefreshTokenSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  appId: {
+  orgId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'App',
+    ref: 'Org',
     required: true
   },
   created: {

@@ -1,3 +1,7 @@
+const { APIKeyModel } = require('../models/token')
+const MessageModel = require('../models/message')
+const UserModel = require('../models/user')
+
 const mongoose = require('mongoose')
 const appSchema = new mongoose.Schema({
   name: {
@@ -9,33 +13,23 @@ const appSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  email: {
-    type: String,
+  orgId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Org',
     required: true
-  },
-  password: {
-    type: String,
-    required: true
-  },
-  secret: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  phone: {
-    type: String,
-    required: true
-  },
-  verified: {
-    type: Boolean,
-    default: false
   },
   vapidKeys: {
     type: Object,
     required: true
   }
 })
-
+appSchema.post('findOneAndRemove', async function (doc) {
+  if (doc._id) {
+    await MessageModel.deleteMany({ appId: doc._id })
+    await APIKeyModel.deleteMany({ appId: doc._id })
+    await UserModel.deleteMany({ appId: doc._id })
+  }
+})
 const AppModel = mongoose.model('App', appSchema)
 
 module.exports = AppModel

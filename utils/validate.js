@@ -59,6 +59,31 @@ const appUpdateSchema = {
   additionalProperties: false
 }
 
+const orgSchema = {
+  type: 'object',
+  properties: {
+    firstName: { type: 'string' },
+    lastName: { type: 'string' },
+    email: { type: 'string' },
+    password: { type: 'string' },
+    phone: { type: 'string', maxLength: 20 }
+  },
+  required: ['firstName', 'lastName', 'email', 'password', 'phone'],
+  additionalProperties: false
+}
+
+const orgUpdateSchema = {
+  type: 'object',
+  properties: {
+    firstName: { type: 'string' },
+    lastName: { type: 'string' },
+    email: { type: 'string' },
+    password: { type: 'string' },
+    phone: { type: 'string', maxLength: 20 }
+  },
+  additionalProperties: false
+}
+
 const subscriptionSchema = {
   type: 'object',
   properties: {
@@ -149,14 +174,53 @@ function validateApp (app) {
   }
   return [Object.keys(errors).length === 0, errors]
 }
+
+function validateOrg (app) {
+  const errors = {}
+  if (app.firstName) {
+    const [invalid, msgs] = validateName(app.firstName)
+    if (!invalid) {
+      errors.name = msgs
+    }
+  }
+  if (app.lastName) {
+    const [invalid, msgs] = validateName(app.lastName)
+    if (!invalid) {
+      errors.name = msgs
+    }
+  }
+  if (app.password) {
+    const [invalid, msgs] = validatePwd(app.password)
+    if (!invalid) {
+      errors.password = msgs
+    }
+  }
+  if (app.email) {
+    const [invalid, msgs] = validateEmail(app.email)
+    if (!invalid) {
+      errors.email = msgs
+    }
+  }
+  if (app.phone) {
+    const [invalid, msgs] = validatePhone(app.phone)
+    if (!invalid) {
+      errors.phone = msgs
+    }
+  }
+  return [Object.keys(errors).length === 0, errors]
+}
 module.exports = {
   recipientSchema,
   fcmSchema,
   appSchema,
+  orgSchema,
+  orgUpdateSchema,
   appUpdateSchema,
   subscriptionSchema,
   validateSchema,
   validateName,
   validatePwd,
-  validateApp
+  validateApp,
+  validateOrg,
+  validateEmail
 }

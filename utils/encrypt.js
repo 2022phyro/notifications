@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs')
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
-const AppModel = require('../src/models/app')
+const OrgModel = require('../src/models/org')
 const { isBlacklisted, blacklist } = require('../src/DAO/token')
 
 /**
@@ -52,19 +52,19 @@ function generateSecret (length = 16) {
  * @returns {string} - The access token.
  * @returns {string} - The refresh token.
  */
-function getJWTTokens (app) {
+function getJWTTokens (org) {
   const issuedAt = Math.floor(Date.now() / 1000) // current time in seconds since the epoch
   const accessTokenExpiry = issuedAt + 60 * 60 // 1 hour from now
   const refreshTokenExpiry = issuedAt + 60 * 60 * 24 * 7 // 7 days from now
 
   const payload = {
-    sub: app._id,
-    appName: app.name,
+    sub: org._id,
+    orgName: org.name,
     iat: Math.floor(Date.now() / 1000) // current time in seconds since the epoch
   }
 
-  const accessToken = jwt.sign({ ...payload, type: 'access' }, app.secret.slice(0, 16), { expiresIn: '1h', algorithm: 'HS256' })
-  const refreshToken = jwt.sign({ ...payload, type: 'refresh' }, app.secret.slice(0, 16), { expiresIn: '7d', algorithm: 'HS256' })
+  const accessToken = jwt.sign({ ...payload, type: 'access' }, org.secret.slice(0, 16), { expiresIn: '1h', algorithm: 'HS256' })
+  const refreshToken = jwt.sign({ ...payload, type: 'refresh' }, org.secret.slice(0, 16), { expiresIn: '7d', algorithm: 'HS256' })
 
   return {
     accessToken,
@@ -93,15 +93,15 @@ async function refreshTokens (oldRefreshToken) {
       throw new Error('Invalid refresh token')
     }
     // Get the app
-    const app = await AppModel.findById(decoded.sub)
-    if (!app) {
-      throw new Error('App not found')
+    const org = await OrgModel.findById(decoded.sub)
+    if (!org) {
+      throw new Error('Organization not found')
     }
     // Verify the old refresh token
-    jwt.verify(oldRefreshToken, app.secret.slice(0, 16), { algorithms: ['HS256'] })
+    jwt.verify(oldRefreshToken, org.secret.slice(0, 16), { algorithms: ['HS256'] })
 
     // Generate new tokens
-    const newTokens = getJWTTokens(app)
+    const newTokens = getJWTTokens(org)
     await blacklist(decoded.sub, oldRefreshToken, 'refresh')
 
     return newTokens

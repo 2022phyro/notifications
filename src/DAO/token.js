@@ -2,19 +2,19 @@ const { BLAccessTokenModel, BLRefreshTokenModel, APIKeyModel } = require('../mod
 const crypto = require('crypto')
 
 /**
- * Blacklists a token for a specific app.
- * @param {string} appId - The ID of the app.
+ * Blacklists a token for a specific org.
+ * @param {string} orgId - The ID of the org.
  * @param {string} token - The token to be blacklisted.
  * @param {string} type - The type of the token ('access' or 'refresh').
  * @returns {Promise<boolean>} - A promise that resolves to true if the token was blacklisted successfully, or false otherwise.
  */
-async function blacklist (appId, token, type) {
+async function blacklist (orgId, token, type) {
   try {
     if (type === 'access') {
-      const newAccessToken = new BLAccessTokenModel({ token, appId })
+      const newAccessToken = new BLAccessTokenModel({ token, orgId })
       await newAccessToken.save()
     } else if (type === 'refresh') {
-      const newRefreshToken = new BLRefreshTokenModel({ token, appId })
+      const newRefreshToken = new BLRefreshTokenModel({ token, orgId })
       await newRefreshToken.save()
     } else {
       throw new Error('Invalid token type')
