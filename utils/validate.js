@@ -37,12 +37,9 @@ const fcmSchema = {
 const appSchema = {
   type: 'object',
   properties: {
-    name: { type: 'string' },
-    email: { type: 'string' },
-    password: { type: 'string' },
-    phone: { type: 'string', maxLength: 20 }
+    name: { type: 'string', minLength: 3, maxLength: 30 }
   },
-  required: ['name', 'email', 'password', 'phone'],
+  required: ['name'],
   additionalProperties: false
 
 }
@@ -50,11 +47,7 @@ const appSchema = {
 const appUpdateSchema = {
   type: 'object',
   properties: {
-    name: { type: 'string', minLength: 3 },
-    email: { type: 'string' },
-    password: { type: 'string', minLength: 5 },
-    phone: { type: 'string', maxLength: 20 }
-    // Add other fields as needed
+    name: { type: 'string', minLength: 3, maxLength: 30 }
   },
   additionalProperties: false
 }

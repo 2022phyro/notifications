@@ -12,14 +12,12 @@ const App = {
   async newApp (appData, org) {
     delete appData.secret
     delete appData.vapidKeys
-
-    if (appData.password) appData.password = encryptPassword(appData.password)
+    appData.orgId = org._id
     const { publicKey, privateKey } = webpush.generateVAPIDKeys()
     const hashedpuKey = encrypt(publicKey, org.secret)
     const hashedprKey = encrypt(privateKey, org.secret)
     const vapidKeys = { publicKey: hashedpuKey, privateKey: hashedprKey }
     appData.vapidKeys = vapidKeys
-    appData.secret = org.secret
     const app = new AppModel(appData)
     await app.save()
     return app
@@ -50,13 +48,18 @@ const App = {
    * @returns {Promise<Array>} - A promise that resolves to an array of apps.
    * @throws {Error} - If there is an error while fetching apps.
    */
-  async getApps (filters, internal = false) {
+  async getApps (filters, internal = false, org) {
     internal = internal || false
     let apps
     if (internal) {
       apps = await AppModel.find(filters).lean().exec()
     } else {
-      apps = await AppModel.find(filters, { password: 0, secret: 0, verified: 0, __v: 0, vapidKeys: 0 }).lean().exec()
+      apps = await AppModel.find(filters, { password: 0, secret: 0, verified: 0, __v: 0 }).lean().exec()
+      apps = apps.map(app => {
+        const { vapidKeys, ...result } = app
+        result.VAPIDKEY = decrypt(vapidKeys.publicKey, org.secret)
+        return result
+      })
     }
     return apps
   },
@@ -84,9 +87,8 @@ const App = {
  * @returns {Promise<Object>} - A promise that resolves to the deleted app object.
  */
   async deleteApp (appId) {
-    const deletedApp = await AppModel.findOneAndRemove({ _id: appId })
+    const deletedApp = await AppModel.findByIdAndDelete(appId)
     if (!deletedApp) return null
-
     return deletedApp
   },
   decrypt (org, value) {

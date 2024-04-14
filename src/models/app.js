@@ -23,7 +23,7 @@ const appSchema = new mongoose.Schema({
     required: true
   }
 })
-appSchema.post('findOneAndRemove', async function (doc) {
+appSchema.post('findOneAndDelete', async function (doc) {
   if (doc._id) {
     await MessageModel.deleteMany({ appId: doc._id })
     await APIKeyModel.deleteMany({ appId: doc._id })
