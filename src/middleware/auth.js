@@ -46,7 +46,6 @@ async function authenticateJWT (req, res, next) {
           return res.status(500).json(getErrorResponse(500, 'Internal Server Error', { auth: ['Unexpected error'] }))
         }
       }
-
       next()
     } catch (error) {
       console.error(error)

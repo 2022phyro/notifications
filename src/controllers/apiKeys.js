@@ -5,6 +5,7 @@ const { dbLogger } = require('../../utils/logger')
 async function createAPIKey (req, res) {
   try {
     const app = req.app
+    console.log(req.app)
     const { expires } = req.body
 
     const expDate = Date.parse(expires)

@@ -108,16 +108,14 @@ async function patchApp (req, res) {
     }
 
     const updatedApp = await App.updateApp(app._id, updates)
-    const { vapidKeys, ...result } = updatedApp
-    result.VAPIDKey = decrypt(vapidKeys.publicKey, req.org.secret)
-    res.status(200).json(rP.getResponse(200, 'App updates successfully', result))
     if (!updatedApp) {
       return res.status(404).json(rP.getErrorResponse(400, 'App update failed', {
         update: ['App not found']
       }))
     }
-
-    res.status(200).json(rP.getResponse(200, 'App updated successfully', updatedApp))
+    const { vapidKeys, ...result } = updatedApp
+    result.VAPIDKey = decrypt(vapidKeys.publicKey, req.org.secret)
+    return res.status(200).json(rP.getResponse(200, 'App updates successfully', result))
   } catch (error) {
     if ([11000, 11001].includes(error.code)) {
       return res.status(400).json(rP.getErrorResponse(400, 'App update failed', {

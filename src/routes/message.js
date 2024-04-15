@@ -1,7 +1,7 @@
 const express = require('express')
 const { authenticateJWT } = require('../middleware/auth')
 const MessageController = require('../controllers/message')
-const router = express.Router()
+const router = express.Router({ mergeParams: true })
 
 router.get('/:id', authenticateJWT, MessageController.getMessage)
 router.get('', authenticateJWT, MessageController.getMessages)
