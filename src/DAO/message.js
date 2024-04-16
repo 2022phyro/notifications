@@ -69,8 +69,8 @@ Message.deleteMessage = async function (appId, msgId) {
   try {
     const deletedMsg = await MessageModel.findById(msgId)
     if (!deletedMsg) return 'not found'
-    if (deletedMsg.appId !== appId) return 'denied'
-    await deletedMsg.remove()
+		if (deletedMsg.appId.toString() !== appId.toString()) return 'denied'
+    await MessageModel.deleteOne({ _id: deletedMsg._id })
     return 'done'
   } catch (error) {
     console.error('Error deleting the app', error)

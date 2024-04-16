@@ -24,6 +24,7 @@ async function scheduleMessage (channel, msg) {
       return newMsg
     }
   } catch (error) {
+    console.error(error)
     queueLogger.error('Error scheduling message: ' + error)
     throw error
   }

@@ -6,14 +6,15 @@ const channelPromise = require('../../config/rabbitmq')
 async function getMessages (req, res) {
   try {
     const app = req.app
-    let { page } = req.params
-    let { limit, ...filters } = req.query
+    let { page, limit, read, status, userId, retries} = req.query
     page = parseInt(page) || 1
     limit = parseInt(limit) || 30
-
-    console.log(limit)
-    console.log(filters)
-
+		const filters = { read, userId, status, retries }
+		Object.keys(filters).forEach(key => {
+			if (filters[key] === undefined) {
+				delete filters[key]
+			}
+		})
     const data = await Message.getMessages(app._id, page, limit, filters)
     res.status(200).json(rP.getResponse(200, 'Messages retrieved successfully', data))
   } catch (error) {
@@ -82,19 +83,20 @@ async function markAsRead (req, res) {
 }
 
 async function newMessage (req, res) {
-  // Implement logic to create a new message
   try {
-    const message = req.body
+    const { userId, ...notification } = req.body
+    const message = {
+      payload: { userId, appId: req.app._id },
+      notification
+    }
     const { channel } = await channelPromise
-    const success = await scheduleMessage(channel, message)
-    delete success.value
-    delete success.__v
-    res.status(201).json(rP.getResponse(201, 'Notification sent successfully', success))
+    const success = await scheduleMessage(channel, JSON.stringify(message))
+    const { value, __v, ...newMessage } = success.toObject()
+    res.status(201).json(rP.getResponse(201, 'Notification sent successfully', newMessage))
   } catch (error) {
-    res.status(500).json(rP.getErrorResponse(500, 'Message creation failed', { newMessage: [error.message] }))
+    res.status(400).json(rP.getErrorResponse(400, 'Message creation failed', { newMessage: [error.message] }))
   }
 }
-// Export the controller functions
 module.exports = {
   getMessages,
   getMessage,

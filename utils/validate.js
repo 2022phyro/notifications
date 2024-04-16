@@ -14,7 +14,8 @@ const fcmSchema = {
         appId: { type: 'string' },
         userId: { type: 'string' }
 
-      }
+      },
+      required: ['appId', 'userId']
     },
     notification: {
       type: 'object',
