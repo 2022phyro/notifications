@@ -42,6 +42,7 @@ Message.getMessages = async function (appId, page = 1, limit = 30, filters = {})
     const query = { ...filters, appId }
     console.log(page, limit)
     const messages = await MessageModel.find(query, { __v: 0, value: 0 })
+      .sort({ created: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .lean()

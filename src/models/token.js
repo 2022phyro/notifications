@@ -50,6 +50,14 @@ const APIKeySchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+	alias: {
+		type: String,
+		required: true,
+	},
+	scopes: {
+		type: Array,
+		default: []
+	},
   revoked: {
     type: Boolean,
     default: false
@@ -61,7 +69,11 @@ const APIKeySchema = new mongoose.Schema({
   expires: {
     type: Date,
     required: true
-  }
+  },
+	lastUsed: {
+		type: Date,
+		default: Date.now
+	}
 })
 
 const BLAccessTokenModel = mongoose.model('BLAccessToken', BLAccessTokenSchema)

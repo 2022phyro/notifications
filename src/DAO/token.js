@@ -65,7 +65,7 @@ function APIKey (app, key, name, expires) {
  * @returns {Promise<Object>} - A promise that resolves to the newly generated API key.
  * @throws {Error} - If the API key fails to save after 10 attempts.
  */
-APIKey.newKey = async function (app, expires) {
+APIKey.newKey = async function (app, keyData) {
   const key = crypto.randomBytes(32).toString('hex')
   let name = crypto.randomBytes(7).toString('hex')
   /**
@@ -74,7 +74,7 @@ APIKey.newKey = async function (app, expires) {
    * @type {string}
    */
   const hashedKey = crypto.createHash('sha256').update(key).digest('hex')
-  let result = new APIKeyModel({ key: hashedKey, name, appId: app, expires })
+  let result = new APIKeyModel({ key: hashedKey, name, appId: app, ...keyData })
   let saved = false
   for (let count = 0; count < 10; count++) {
     try {
@@ -84,7 +84,7 @@ APIKey.newKey = async function (app, expires) {
     } catch (error) {
       if (error.code && error.code === 11000) {
         name = crypto.randomBytes(7).toString('hex')
-        result = new APIKeyModel({ key: hashedKey, name, appId: app, expires })
+        result = new APIKeyModel({ key: hashedKey, name, appId: app, ...keyData })
       } else {
         throw error
       }
@@ -104,7 +104,7 @@ APIKey.newKey = async function (app, expires) {
  * @returns {Promise<Array>} - A promise that resolves to an array of API keys.
  */
 APIKey.allKeys = async function (appId) {
-  const result = await APIKeyModel.find({ appId }, { key: 0, __v: 0, _id: 0 }).lean().exec()
+  const result = await APIKeyModel.find({ appId }, { key: 0, __v: 0, _id: 0 }).sort({ created: -1 }).lean().exec()
   return result
 }
 
@@ -116,11 +116,12 @@ APIKey.allKeys = async function (appId) {
  * @throws {Error} - If there was an error saving the key.
  */
 APIKey.revokeKey = async function (name, appId) {
-  const key = await APIKeyModel.findOne({ name, appId })
-  if (!key) return null
-  key.revoked = true
-  await key.save()
-  return key
+  const revokedKey = await APIKeyModel.findOneAndUpdate({ name, appId }, { revoked: true, lastUsed: new Date() }, { new: true })
+  if (!revokedKey) return null
+	const { __v, __id, key, ...result } = revokedKey.toObject()
+  //key.revoked = true
+  //await key.save()
+  return result
 }
 
 /**
@@ -167,6 +168,8 @@ APIKey.verifyKey = async function (token) {
   if (!app) {
     return { success: false, message: 'App not found' }
   }
+	apiKey.lastUsed = new Date()
+	await apiKey.save()
   return { success: true, message: app }
 }
 

@@ -5,14 +5,14 @@ const { dbLogger } = require('../../utils/logger')
 async function createAPIKey (req, res) {
   try {
     const app = req.app
-    console.log(req.app)
-    const { expires } = req.body
-
-    const expDate = Date.parse(expires)
-    if (!expDate) {
-      return res.status(400).json(rP.getErrorResponse(400, 'Bad Request', { apikey: ['Invalid expires date'] }))
+    const { expiry, alias, scopes } = req.body
+		if (!Date.parse(expiry)) {
+      return res.status(400).json(rP.getErrorResponse(400, 'Bad Request', { apikey: ['Invalid expiration date'] }))
     }
-    const key = await APIKey.newKey(app._id, expDate)
+    const expDate = new Date(expiry)
+		console.log(expDate)
+  
+    const key = await APIKey.newKey(app._id, {expires: expDate, alias, scopes})
     return res.status(200).json(rP.getResponse(200, 'API key created', key))
   } catch (error) {
     dbLogger.error(error)
@@ -27,7 +27,7 @@ async function createAPIKey (req, res) {
 async function listAPIKeys (req, res) {
   try {
     const app = req.app
-    const keys = await APIKey.allKeys({ appId: app._id })
+    const keys = await APIKey.allKeys(app._id)
     return res.status(200).json(rP.getResponse(200, 'All api keys retrieved', keys))
   } catch (error) {
     dbLogger.error(error)

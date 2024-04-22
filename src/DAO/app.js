@@ -54,7 +54,7 @@ const App = {
     if (internal) {
       apps = await AppModel.find(filters).lean().exec()
     } else {
-      apps = await AppModel.find(filters, { password: 0, secret: 0, verified: 0, __v: 0 }).lean().exec()
+      apps = await AppModel.find(filters, { password: 0, secret: 0, verified: 0, __v: 0 }).sort({ created: -1 }).lean().exec()
       apps = apps.map(app => {
         const { vapidKeys, ...result } = app
         result.VAPIDKEY = decrypt(vapidKeys.publicKey, org.secret)
