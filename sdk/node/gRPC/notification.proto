@@ -7,7 +7,7 @@ message Notification {
 }
 
 service NotificationService {
-  rpc SendNotification(stream Notification) returns (stream SendNotificationResponse);
+  rpc SendNotification(Notification) returns (SendNotificationResponse);
 }
 
 message SendNotificationResponse {

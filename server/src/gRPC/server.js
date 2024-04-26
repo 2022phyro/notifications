@@ -20,20 +20,18 @@ const packageDefinition = protoLoader.loadSync(
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition)
 const NotificationService = protoDescriptor.notification.NotificationService
 
-const server = new grpc.Server()
-
 const serviceImpl = {
-  sendNotification: function (call) {
-    call.on('data', async (notification) => {
-      await handleGRPCData(call, notification)
-    })
-
-    call.on('end', () => {
-      call.end()
-    })
+  sendNotification: async (call, callback) => {
+    try {
+      const response = await handleGRPCData(call)
+      callback(null, { success: true, message: response })
+    } catch (err) {
+      callback(err)
+    }
   }
 }
 mongoDB()
+const server = new grpc.Server()
 server.addService(NotificationService.service, serviceImpl)
 server.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), () => {
   gRPCLogger.info('Server started on port 50051')

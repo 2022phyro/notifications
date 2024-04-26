@@ -1,10 +1,9 @@
 const grpc = require('@grpc/grpc-js')
 const protoLoader = require('@grpc/proto-loader')
-const PROTO_PATH = './notification.proto'
+const path = require('path')
+const baseDir = path.resolve(__dirname, './')
+const PROTO_PATH = path.join(baseDir, 'notification.proto')
 
-let call;
-let timeoutId;
-let TIMEOUT_LIMIT = 10 * 60 * 1000
 const packageDefinition = protoLoader.loadSync(
   PROTO_PATH,
   {
@@ -13,33 +12,23 @@ const packageDefinition = protoLoader.loadSync(
     enums: String,
     defaults: true,
     oneofs: true
-  })
+  }
+)
+
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition)
 const NotificationService = protoDescriptor.notification.NotificationService
 
-function resetTime() {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => {
-        if (call) call.end();
-        call = null;
-    }, TIMEOUT_LIMIT)
-}
-
 function init (apiKey, log) {
-    if (call) {
-        return call;
-    }
-    log = log || true
-    const metadata = new grpc.Metadata()
-    metadata.add('authorization', apiKey)
-    const client = new NotificationService('notifai.allcanlearn.me', grpc.ChannelCredentials.createSsl())
-    if (log) console.log('Started Client')
-    call = client.sendNotification(meta = metadata)
+  log = log || true
+  const metadata = new grpc.Metadata()
+  metadata.add('authorization', apiKey)
+  const client = new NotificationService('0.0.0.0:50051', grpc.credentials.createInsecure())
 
-    resetTime()
-    return call
+  if (log) console.log('Started Client')
+
+  return { client, metadata }
 }
 
 module.exports = {
-    init
+  init
 }
