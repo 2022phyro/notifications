@@ -1,0 +1,16 @@
+syntax = "proto3";
+package notification;
+
+message Notification {
+  string payload = 2;
+  string data = 3;
+}
+
+service NotificationService {
+  rpc SendNotification(stream Notification) returns (stream SendNotificationResponse);
+}
+
+message SendNotificationResponse {
+  bool success = 1;
+  string message = 2;
+}
