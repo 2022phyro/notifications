@@ -118,9 +118,9 @@ APIKey.allKeys = async function (appId) {
 APIKey.revokeKey = async function (name, appId) {
   const revokedKey = await APIKeyModel.findOneAndUpdate({ name, appId }, { revoked: true, lastUsed: new Date() }, { new: true })
   if (!revokedKey) return null
-	const { __v, __id, key, ...result } = revokedKey.toObject()
-  //key.revoked = true
-  //await key.save()
+  const { __v, __id, key, ...result } = revokedKey.toObject()
+  // key.revoked = true
+  // await key.save()
   return result
 }
 
@@ -168,8 +168,8 @@ APIKey.verifyKey = async function (token) {
   if (!app) {
     return { success: false, message: 'App not found' }
   }
-	apiKey.lastUsed = new Date()
-	await apiKey.save()
+  apiKey.lastUsed = new Date()
+  await apiKey.save()
   return { success: true, message: app }
 }
 

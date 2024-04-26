@@ -53,7 +53,7 @@ async function sendNotification (message, appConfig) {
     }
 
     if (errors.length > 0) {
-      //reschedule
+      // reschedule
     } else {
       await success(message)
     }

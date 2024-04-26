@@ -6,13 +6,13 @@ async function createAPIKey (req, res) {
   try {
     const app = req.app
     const { expiry, alias, scopes } = req.body
-		if (!Date.parse(expiry)) {
+    if (!Date.parse(expiry)) {
       return res.status(400).json(rP.getErrorResponse(400, 'Bad Request', { apikey: ['Invalid expiration date'] }))
     }
     const expDate = new Date(expiry)
-		console.log(expDate)
-  
-    const key = await APIKey.newKey(app._id, {expires: expDate, alias, scopes})
+    console.log(expDate)
+
+    const key = await APIKey.newKey(app._id, { expires: expDate, alias, scopes })
     return res.status(200).json(rP.getResponse(200, 'API key created', key))
   } catch (error) {
     dbLogger.error(error)

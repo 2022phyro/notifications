@@ -6,15 +6,15 @@ const channelPromise = require('../../config/rabbitmq')
 async function getMessages (req, res) {
   try {
     const app = req.app
-    let { page, limit, read, status, userId, retries} = req.query
+    let { page, limit, read, status, userId, retries } = req.query
     page = parseInt(page) || 1
     limit = parseInt(limit) || 30
-		const filters = { read, userId, status, retries }
-		Object.keys(filters).forEach(key => {
-			if (filters[key] === undefined) {
-				delete filters[key]
-			}
-		})
+    const filters = { read, userId, status, retries }
+    Object.keys(filters).forEach(key => {
+      if (filters[key] === undefined) {
+        delete filters[key]
+      }
+    })
     const data = await Message.getMessages(app._id, page, limit, filters)
     res.status(200).json(rP.getResponse(200, 'Messages retrieved successfully', data))
   } catch (error) {
