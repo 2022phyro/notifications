@@ -90,7 +90,7 @@ async function newMessage (req, res) {
       notification
     }
     const { channel } = await channelPromise
-    const success = await scheduleMessage(channel, JSON.stringify(message))
+    const success = await scheduleMessage(channel, JSON.stringify(message), req.app)
     const { value, __v, ...newMessage } = success.toObject()
     res.status(201).json(rP.getResponse(201, 'Notification sent successfully', newMessage))
   } catch (error) {

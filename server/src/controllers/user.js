@@ -11,10 +11,17 @@ async function subscribe (req, res) {
     const { payload, ...device } = req.body
     vD.validateSchema(device, vD.subscriptionSchema)
     const app = await App.getApp(undefined, { name: payload.appName })
-    if (!app || App.decrypt(app, app.vapidKeys.publicKey) !== payload.publicKey) {
+    if (!app) {
       return res
         .status(404)
         .json(rP.getErrorResponse(404, 'User subscription failed', { subscribe: ['App not found'] }))
+    }
+    await app.populate('orgId')
+    const org = app.orgId
+    if (App.decrypt(org, app.vapidKeys.publicKey) !== payload.publicKey) {
+      return res
+        .status(404)
+        .json(rP.getErrorResponse(404, 'User subscription failed', { subscribe: ['Invalid vapid key'] }))
     }
     const user = await User.subscribe(userId, app._id, device)
     if (!user) {
@@ -22,7 +29,7 @@ async function subscribe (req, res) {
         .status(400)
         .json(rP.getErrorResponse(400, 'User subscription failed', { subscribe: ["User couldn't be subscribed"] }))
     }
-    const tokens = getJWTTokens(app)
+    const tokens = getJWTTokens(org)
     res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE || 86400 * 1000), httpOnly: true }) // Add htttpOnly later on
     return res.status(200).json(rP.getResponse(200, 'User subscribed', {
       _id: user._id,
@@ -38,6 +45,7 @@ async function subscribe (req, res) {
           subscribe: [err.message.split(': ')[1]]
         }))
     } else {
+      console.error(err)
       dbLogger.error(err)
       return res
         .status(400)

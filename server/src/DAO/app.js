@@ -57,7 +57,7 @@ const App = {
       apps = await AppModel.find(filters, { password: 0, secret: 0, verified: 0, __v: 0 }).sort({ created: -1 }).lean().exec()
       apps = apps.map(app => {
         const { vapidKeys, ...result } = app
-        result.VAPIDKEY = decrypt(vapidKeys.publicKey, org.secret)
+        result.publicKey = decrypt(vapidKeys.publicKey, org.secret)
         return result
       })
     }

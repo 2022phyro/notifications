@@ -7,7 +7,7 @@ function send (client, metadata, data) {
       const { payload, notification } = data
       const msg = {
         payload: JSON.stringify(payload),
-        notification: JSON.stringify(notification)
+        data: JSON.stringify(notification)
       }
       client.sendNotification(msg, metadata, (err, res) => {
         if (err) {

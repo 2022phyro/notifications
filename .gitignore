@@ -4,3 +4,4 @@ node_modules
 *.secret*
 *client.js
 logs
+test.js

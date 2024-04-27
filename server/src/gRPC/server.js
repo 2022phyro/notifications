@@ -16,16 +16,15 @@ const packageDefinition = protoLoader.loadSync(
     defaults: true,
     oneofs: true
   })
-
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition)
 const NotificationService = protoDescriptor.notification.NotificationService
-
 const serviceImpl = {
   sendNotification: async (call, callback) => {
     try {
       const response = await handleGRPCData(call)
-      callback(null, { success: true, message: response })
+      callback(null, response)
     } catch (err) {
+      console.error(err)
       callback(err)
     }
   }

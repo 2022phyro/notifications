@@ -27,7 +27,7 @@ async function newApp (req, res) {
     }
     const app = await App.newApp(appData, req.org)
     const { vapidKeys, __v, ...result } = app.toObject()
-    result.VAPIDKey = decrypt(vapidKeys.publicKey, req.org.secret)
+    result.publicKey = decrypt(vapidKeys.publicKey, req.org.secret)
     return res
       .status(201)
       .json(rP.getResponse(201, 'App successfully registered', result))
@@ -67,7 +67,7 @@ async function newApp (req, res) {
 async function getApp (req, res) {
   try {
     const { vapidKeys, __v, ...result } = req.app.toObject()
-    result.VAPIDKey = decrypt(vapidKeys.publicKey, req.org.secret)
+    result.publicKey = decrypt(vapidKeys.publicKey, req.org.secret)
     res.status(200).json(rP.getResponse(200, 'App retrieved successfully', result))
   } catch (error) {
     dbLogger.error(error)
@@ -114,7 +114,7 @@ async function patchApp (req, res) {
       }))
     }
     const { vapidKeys, ...result } = updatedApp
-    result.VAPIDKey = decrypt(vapidKeys.publicKey, req.org.secret)
+    result.publicKey = decrypt(vapidKeys.publicKey, req.org.secret)
     return res.status(200).json(rP.getResponse(200, 'App updates successfully', result))
   } catch (error) {
     if ([11000, 11001].includes(error.code)) {

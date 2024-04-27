@@ -37,7 +37,8 @@ async function sendNotification (message, appConfig) {
           p256dh: device.p256dh
         }
       }
-      webpush.setVapidDetails(appConfig.vapidDetails.subject, appConfig.vapidDetails.publicKey, appConfig.vapidDetails.privateKey)
+      const { subject, publicKey, privateKey } = appConfig
+      webpush.setVapidDetails(subject, publicKey, privateKey)
       try {
         const result = await webpush.sendNotification(subscription, JSON.stringify(message))
         webpushLogger.info(`${result.statusCode} - Message ${message.data._id} sent to location ${result.headers.location}`)
@@ -51,14 +52,15 @@ async function sendNotification (message, appConfig) {
         }
       }
     }
-
     if (errors.length > 0) {
+      console.error(errors)
       // reschedule
     } else {
       await success(message)
     }
     await recipent.save()
   } catch (err) {
+    console.error(err)
     webpushLogger.error(err)
   }
 }

@@ -1,5 +1,5 @@
 const mongoDB = require('./config/db')
-// const { startSending } = require('./src/controllers/queue')
+const { startSending } = require('./src/controllers/queue')
 const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
@@ -51,4 +51,4 @@ mongoDB()
 app.listen(3000, () => {
   logger.child({ name: 'Express' }).info('Express server is running on port 3000')
 })
-// startSending().catch(console.error)
+startSending().catch(console.error)

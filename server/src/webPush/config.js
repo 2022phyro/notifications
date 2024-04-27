@@ -1,20 +1,15 @@
-const App = require('../../src/DAO/app')
+const { decrypt } = require('../../utils/encrypt')
 // const webpush = require('web-push')
 // const urlsafeBase64 = require('urlsafe-base64')
 
-function config (app) {
-  const publicKey = App.decrypt(app, app.vapidKeys.publicKey)
-  const privateKey = App.decrypt(app, app.vapidKeys.privateKey)
-  // const email = app.email
-
-  // const sender = webpush
-  // sender.setVapidDetails(
-  //   'mailto:phyrokelstein2@gmail.com', // will be replaced with apps email later
-  //   publicKey,
-  //   privateKey
-  // )
+async function config (app) {
+  await app.populate('orgId')
+  const org = app.orgId
+  const publicKey = decrypt(app.vapidKeys.publicKey, org.secret)
+  const privateKey = decrypt(app.vapidKeys.privateKey, org.secret)
   return {
-    subject: 'mailto:phyrokelstein2@gmail.com',
+    id: app._id,
+    subject: `mailto:phyrokelstein2@gmail.com`,
     publicKey,
     privateKey
   }

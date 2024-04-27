@@ -168,7 +168,7 @@ APIKey.verifyKey = async function (token) {
   if (!app) {
     return { success: false, message: 'App not found' }
   }
-  apiKey.lastUsed = new Date()
+  apiKey.lastUsed = new Date(Date.now())
   await apiKey.save()
   return { success: true, message: app }
 }

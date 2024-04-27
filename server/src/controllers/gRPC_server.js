@@ -14,14 +14,13 @@ async function authorizeGRPC (call) {
 }
 
 async function handleGRPCData (call) {
-  let { success, message } = await authorizeGRPC(call)
+  const { success, message: app } = await authorizeGRPC(call)
   if (!success) {
     throw new GRPCError(
       grpc.status.UNAUTHENTICATED,
-      message
+      app
     )
   }
-  const app = message
   const notification = call.request
   if (!notification) {
     throw new GRPCError(
@@ -37,9 +36,9 @@ async function handleGRPCData (call) {
       'The message payload is invalid'
     )
   }
-  message = JSON.stringify({ payload, notification: data })
+  const message = JSON.stringify({ payload, notification: data })
   const { confirmChannel } = await channelPromise
-  await scheduleMessage(confirmChannel, message)
+  await scheduleMessage(confirmChannel, message, app)
   return { success: true, message: 'Message successfully delivered' }
 }
 module.exports = {

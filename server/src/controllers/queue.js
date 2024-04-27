@@ -7,7 +7,7 @@ const { queueLogger } = require('../../utils/logger')
 require('dotenv').config()
 const config = require('../webPush/config')
 const { sendNotification } = require('../webPush/send')
-async function scheduleMessage (channel, msg) {
+async function scheduleMessage (channel, msg, app) {
   try {
     if (msg instanceof Error) throw msg
     const message = JSON.parse(msg)
@@ -15,9 +15,11 @@ async function scheduleMessage (channel, msg) {
     validateSchema(message, fcmSchema)
     const newMsg = await Message.createMessage(message.payload, message.notification)
     newMsg.value.data = { _id: newMsg._id, ...newMsg.value.data, ...message.payload }
-    const [stat, err] = await broker.sendToQueue(channel, queue, newMsg.value)
+    const vapidDetails = await config(app)
+
+    const queueMsg = { config: vapidDetails, value: newMsg.value }
+    const [stat, err] = await broker.sendToQueue(channel, queue, queueMsg)
     if (!stat) {
-      // Reschedule
       queueLogger.error(err)
     } else {
       queueLogger.info(` Message ${newMsg._id} successfully sent to queue`)
@@ -43,17 +45,11 @@ async function startConsuming () {
 async function startSending () {
   const queue = process.env.FCM_QUEUE
   const { channel } = await channelPromise
-  const apps = await App.getApps({}, true)
-  const appsConfig = apps.map(app => ({
-    id: app._id.toString(),
-    vapidDetails: config(app)
-  }))
   await broker.consumeMessage(channel, queue, async (message) => {
     try {
       if (message instanceof Error) throw message
-      const msg = JSON.parse(message)
-      const app = appsConfig.find(app => app.id === msg.data.appId)
-      await sendNotification(msg, app)
+      const { value, config } = JSON.parse(message)
+      await sendNotification(value, config)
     } catch (error) {
       queueLogger.error('Error sending message: ' + error)
     }
