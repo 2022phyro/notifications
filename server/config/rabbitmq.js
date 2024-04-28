@@ -1,8 +1,9 @@
 const amqp = require('amqplib')
 const { queueLogger } = require('../utils/logger')
+require('dotenv').config()
 let channel = null
 let confirmChannel = null
-const url = 'amqp://localhost'
+const url = process.env.RABBIT_URL // 'amqp://localhost'
 
 const channelPromise = new Promise((resolve, reject) => {
   async function connect () {
