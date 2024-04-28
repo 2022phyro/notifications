@@ -1,5 +1,5 @@
-const { init } = require('./gRPC')
-const { send } = require('./notifications')
+const { init } = require('./src/gRPC')
+const { send } = require('./src/notifications')
 
 class Notifai {
   constructor (apiKey, appId) {

@@ -22,7 +22,7 @@ function init (apiKey, log) {
   log = log || true
   const metadata = new grpc.Metadata()
   metadata.add('authorization', apiKey)
-  const client = new NotificationService('0.0.0.0:50051', grpc.credentials.createInsecure())
+  const client = new NotificationService('notifai.allcanlearn.me', grpc.ChannelCredentials.createSsl())
 
   if (log) console.log('Started Client')
 

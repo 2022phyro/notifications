@@ -6,5 +6,5 @@ node_modules
 *client.js
 logs
 temp
-server.tar.gz
+server*.tar.gz
 test_deploy.sh
