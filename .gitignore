@@ -7,3 +7,4 @@ node_modules
 logs
 temp
 server.tar.gz
+test_deploy.sh
