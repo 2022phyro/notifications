@@ -30,7 +30,7 @@ async function subscribe (req, res) {
         .json(rP.getErrorResponse(400, 'User subscription failed', { subscribe: ["User couldn't be subscribed"] }))
     }
     const tokens = getJWTTokens(org)
-    res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE || 86400 * 1000), httpOnly: true }) // Add htttpOnly later on
+    res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE), httpOnly: true, secure: true, sameSite: 'none' })
     return res.status(200).json(rP.getResponse(200, 'User subscribed', {
       _id: user._id,
       dbId: user.dbId,

@@ -1,7 +1,9 @@
+.cache_ggshield
 node_modules
 *.env
 .vscode
 *.secret*
 *client.js
 logs
-test.js
+temp
+server.tar.gz

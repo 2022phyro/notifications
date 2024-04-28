@@ -31,7 +31,7 @@ async function login (req, res) {
       return res.status(401).json(rP.getErrorResponse(401, 'Org login failed', { login: ['Invalid password'] }))
     }
     const tokens = getJWTTokens(org)
-    res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE) }) //, httpOnly: true })
+    res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE), httpOnly: true, secure: true, sameSite: 'none' })
     const data = {
       tokens,
       orgId: org._id,
@@ -99,7 +99,7 @@ async function signup (req, res) {
       orgId: org._id,
       name: org.name
     }
-    res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE) }) // httpOnly: true })
+    res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE), httpOnly: true, secure: true, sameSite: 'none' })
     // Return a 201 response with the registration success message and the response data
     return res
       .status(201)
@@ -205,7 +205,7 @@ async function refreshToken (req, res) {
   try {
     const refresh = req.cookies.refresh
     const tokens = await refreshTokens(refresh)
-    res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE) }) //, httpOnly: true }) // Add htttpOnly later on
+    res.cookie('refresh', tokens.refreshToken, { maxAge: Number(process.env.MAX_AGE), httpOnly: true, secure: true, sameSite: 'none' })
     res.status(200).json(rP.getResponse(200, 'Refresh token generated', tokens))
   } catch (error) {
     res.status(400).json(rP.getErrorResponse(400, 'Error refreshing token', {
