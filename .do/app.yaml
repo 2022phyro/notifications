@@ -6,13 +6,16 @@ services:
   github:
     repo: 2022phyro/notifications
     branch: main
-    deploy_on_push: true
+    deploy_on_push: true 
   source_dir: server
   envs:
   - key: TARGET_COMPONENT
     value: "grpcsvc:5500"
     scope: RUN_TIME
 - name: grpc-server
+  internal_ports:
+    - 5500
+    - protocol: tcp
   environment_slug: node-js
   run_command: "npm run start-grpc"
   github:
@@ -20,5 +23,5 @@ services:
     branch: main
     deploy_on_push: true
   source_dir: server
-  internal_ports:
-  - 5500
+  routes:
+    - path: /grpc

@@ -22,7 +22,7 @@ function init (apiKey, log) {
   log = log || true
   const metadata = new grpc.Metadata()
   metadata.add('authorization', apiKey)
-  const client = new NotificationService('notifai.allcanlearn.me', grpc.ChannelCredentials.createSsl())
+  const client = new NotificationService('notifai-server-r3nas.ondigitalocean.app', grpc.credentials.createInsecure())
 
   if (log) console.log('Started Client')
 

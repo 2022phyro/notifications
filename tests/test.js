@@ -1,6 +1,6 @@
-const Notifai = require('./sdk/node')
-const apiKey = 'your api key'
-const client = new Notifai(apiKey, 'your app id')
+const Notifai = require('../sdk/node')
+const apiKey = ''
+const client = new Notifai(apiKey, '')
 const message = {
     userId: 'your-user-id',
     title: 'Sample title',
