@@ -6,6 +6,7 @@ services:
   github:
     repo: 2022phyro/notifications
     branch: main
+    deploy_on_push: true
   source_dir: server
   envs:
   - key: TARGET_COMPONENT
@@ -17,6 +18,7 @@ services:
   github:
     repo: 2022phyro/notifications
     branch: main
+    deploy_on_push: true
   source_dir: server
   internal_ports:
   - 5500
