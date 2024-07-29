@@ -19,6 +19,7 @@ externalDocs:
   url: http://swagger.io
 servers:
   - url: http://localhost:3000/api/v1
+  - url: https://notifai-server-r3nas.ondigitalocean.app/api/v1
 tags:
   - name: app
     description: Managing the App Instance
