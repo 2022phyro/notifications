@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-// const AppModel = require('./app')
 
 const messageSchema = new mongoose.Schema({
   created: {
@@ -37,10 +36,6 @@ messageSchema.pre('save', async function (next) {
   if (!mongoose.Types.ObjectId.isValid(this.appId)) {
     throw new Error('Invalid appId')
   }
-  // const app = await AppModel.findById(this.appId)
-  // if (!app) {
-  //   throw new Error('App doesn\'t exist')
-  // }
   next()
 })
 

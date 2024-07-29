@@ -47,7 +47,6 @@ const generalTransport = pino.transport({
     }
   ]
 })
-//  const log = pino(options, transport);
 const webpushLogger = pino({ name: 'Web-Push' }, generalTransport)
 const serverLogger = pino({ name: 'Express' }, expressTransport)
 const queueLogger = pino({ name: 'RabbitMQ' }, generalTransport)

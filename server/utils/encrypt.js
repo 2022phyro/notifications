@@ -1,3 +1,4 @@
+/* eslint-disable eqeqeq */
 const bcrypt = require('bcryptjs')
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
@@ -63,8 +64,16 @@ function getJWTTokens (org) {
     iat: Math.floor(Date.now() / 1000) // current time in seconds since the epoch
   }
 
-  const accessToken = jwt.sign({ ...payload, type: 'access' }, org.secret.slice(0, 16), { expiresIn: '1h', algorithm: 'HS256' })
-  const refreshToken = jwt.sign({ ...payload, type: 'refresh' }, org.secret.slice(0, 16), { expiresIn: '7d', algorithm: 'HS256' })
+  const accessToken = jwt.sign(
+    { ...payload, type: 'access' },
+    org.secret.slice(0, 16),
+    { expiresIn: '1h', algorithm: process.env.SIGNING_ALGORITHM }
+  )
+  const refreshToken = jwt.sign(
+    { ...payload, type: 'refresh' },
+    org.secret.slice(0, 16),
+    { expiresIn: '7d', algorithm: process.env.SIGNING_ALGORITHM }
+  )
 
   return {
     accessToken,
@@ -89,7 +98,7 @@ async function refreshTokens (oldRefreshToken) {
       throw new Error('Token is blacklisted')
     }
     const decoded = jwt.decode(oldRefreshToken)
-    if (!decoded && !decoded.type === 'refresh') {
+    if (!decoded && !(decoded.type == 'refresh')) {
       throw new Error('Invalid refresh token')
     }
     // Get the app
@@ -98,7 +107,9 @@ async function refreshTokens (oldRefreshToken) {
       throw new Error('Organization not found')
     }
     // Verify the old refresh token
-    jwt.verify(oldRefreshToken, org.secret.slice(0, 16), { algorithms: ['HS256'] })
+    jwt.verify(oldRefreshToken, org.secret.slice(0, 16), {
+      algorithms: [process.env.SIGNING_ALGORITHM]
+    })
 
     // Generate new tokens
     const newTokens = getJWTTokens(org)
@@ -110,17 +121,24 @@ async function refreshTokens (oldRefreshToken) {
   }
 }
 function encrypt (target, secret) {
-  const iv = crypto.randomBytes(16) // Generate a random IV
-  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(secret, 'hex'), iv)
+  const iv = crypto.randomBytes(12)
+  const algorithm = process.env.ENCRYPTION
+  const key = crypto.scryptSync(secret, 'salt', 32)
+  const cipher = crypto.createCipheriv(algorithm, key, iv)
   let encrypted = cipher.update(target, 'utf8', 'hex')
   encrypted += cipher.final('hex')
-  return iv.toString('hex') + encrypted
+  const authTag = cipher.getAuthTag().toString('hex')
+  return iv.toString('hex') + encrypted + authTag
 }
 
-function decrypt (encrypted, secret) {
-  const iv = Buffer.from(encrypted.slice(0, 32), 'hex') // Extract IV from the encrypted string
-  encrypted = encrypted.slice(32) // Remove IV from the encrypted string
-  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secret, 'hex'), iv)
+function decrypt (encryptedData, secret) {
+  const iv = Buffer.from(encryptedData.slice(0, 24), 'hex')
+  const encrypted = encryptedData.slice(24, -32)
+  const authTag = Buffer.from(encryptedData.slice(-32), 'hex')
+  const algorithm = process.env.ENCRYPTION
+  const key = crypto.scryptSync(secret, 'salt', 32)
+  const decipher = crypto.createDecipheriv(algorithm, key, iv)
+  decipher.setAuthTag(authTag)
   let decrypted = decipher.update(encrypted, 'hex', 'utf8')
   decrypted += decipher.final('utf8')
   return decrypted

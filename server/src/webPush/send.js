@@ -27,7 +27,6 @@ async function sendNotification (message, appConfig) {
   try {
     const recipent = await User.get(message.data.userId, appConfig.id, true)
     if (!recipent) return
-
     const errors = []
     for (const device of recipent.devices) {
       const subscription = {
@@ -60,7 +59,6 @@ async function sendNotification (message, appConfig) {
     }
     await recipent.save()
   } catch (err) {
-    console.error(err)
     webpushLogger.error(err)
   }
 }

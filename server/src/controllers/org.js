@@ -1,4 +1,3 @@
-// const App = require('../DAO/app')
 const Org = require('../DAO/org')
 const TokenDAO = require('../DAO/token')
 const { verifyPassword, getJWTTokens, refreshTokens } = require('../../utils/encrypt')

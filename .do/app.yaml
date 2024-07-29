@@ -1,0 +1,20 @@
+name: notifai-server
+services:
+- name: web-server
+  environment_slug: node-js
+  run_command: "npm start"
+  github:
+    repo: 2022phyro/notifications
+    branch: main
+  envs:
+  - key: TARGET_COMPONENT
+    value: "grpcsvc:5500"
+    scope: RUN_TIME
+- name: grpc-server
+  environment_slug: node-js
+  run_command: "npm run start-grpc"
+  github:
+    repo: 2022phyro/notifications
+    branch: main
+  internal_ports:
+  - 5500

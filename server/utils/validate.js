@@ -103,7 +103,7 @@ function validateName (name) {
   if (name.length < 3 || name.length > 20) {
     errors.push('App name should be between 3 and 20 characters')
   }
-  if (!/^[a-zA-Z0-9_]+$/.test(name)) {
+  if (!/^\w+$/.test(name)) {
     errors.push('App name must contain only letters, underscores, and numbers')
   }
   if (!/^[a-zA-Z]/.test(name)) {
@@ -118,7 +118,7 @@ function validatePwd (password) {
     errors.push('Password must be a string')
   }
   const hasLetters = /[a-zA-Z]/.test(password)
-  const hasNumbers = /[0-9]/.test(password)
+  const hasNumbers = /\d/.test(password)
   if (!hasLetters || !hasNumbers) {
     errors.push('Password must contain both letters and numbers')
   }

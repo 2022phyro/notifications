@@ -48,7 +48,7 @@ const App = {
    * @returns {Promise<Array>} - A promise that resolves to an array of apps.
    * @throws {Error} - If there is an error while fetching apps.
    */
-  async getApps (filters, internal = false, org) {
+  async getApps (filters, org, internal = false) {
     internal = internal || false
     let apps
     if (internal) {

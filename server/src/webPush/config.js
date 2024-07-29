@@ -1,7 +1,5 @@
 const { decrypt } = require('../../utils/encrypt')
-// const webpush = require('web-push')
-// const urlsafeBase64 = require('urlsafe-base64')
-
+require('dotenv').config()
 async function config (app) {
   await app.populate('orgId')
   const org = app.orgId
@@ -9,7 +7,7 @@ async function config (app) {
   const privateKey = decrypt(app.vapidKeys.privateKey, org.secret)
   return {
     id: app._id,
-    subject: `mailto:phyrokelstein2@gmail.com`,
+    subject: `mailto:${process.env.NOTIFAI_EMAL}`,
     publicKey,
     privateKey
   }

@@ -27,7 +27,7 @@ async function authenticateJWT (req, res, next) {
         return res.status(401).json(getErrorResponse(401, 'Authentication failed', { auth: ['Organization not found'] }))
       }
       // Verify the token with the app's secret
-      jwt.verify(token, org.secret.slice(0, 16), { algorithms: ['HS256'] })
+      jwt.verify(token, org.secret.slice(0, 16), { algorithms: [process.env.SIGNING_ALGORITHM] })
       // Add the app to the request
       req.org = org
       req.token = token

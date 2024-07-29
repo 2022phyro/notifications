@@ -79,7 +79,7 @@ async function getApp (req, res) {
 
 async function getApps (req, res) {
   try {
-    const apps = await App.getApps({ orgId: req.org._id }, false, req.org)
+    const apps = await App.getApps({ orgId: req.org._id }, req.org)
     res.status(200).json(rP.getResponse(200, 'App retrieved successfully', apps))
   } catch (error) {
     dbLogger.error(error)
@@ -152,12 +152,7 @@ async function deleteApp (req, res) {
       }))
     }
     res.status(204).json()
-    // const { channel } = await channelPromise
-    // await deleteRabbitQueue(channel, appName)
   } catch (error) {
-    // if (error.startsWith('QueueError')) {
-    //   queueLogger.error(error.message, error)
-    // }
     dbLogger.error(error.message, error)
     res.status(500).json(rP.getErrorResponse(500, 'Internal Server Error', {
       delete: [error.message]
