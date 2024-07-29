@@ -6,6 +6,7 @@ services:
   github:
     repo: 2022phyro/notifications
     branch: main
+  source_dir: server
   envs:
   - key: TARGET_COMPONENT
     value: "grpcsvc:5500"
@@ -16,5 +17,6 @@ services:
   github:
     repo: 2022phyro/notifications
     branch: main
+  source_dir: server
   internal_ports:
   - 5500

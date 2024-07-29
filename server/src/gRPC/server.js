@@ -29,9 +29,14 @@ const serviceImpl = {
     }
   }
 }
-mongoDB()
-const server = new grpc.Server()
-server.addService(NotificationService.service, serviceImpl)
-server.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), () => {
-  gRPCLogger.info('Server started on port 50051')
-})
+function main () {
+  mongoDB()
+  const server = new grpc.Server()
+  const port = process.env.PORT || 3000
+  server.addService(NotificationService.service, serviceImpl)
+  server.bindAsync(`0.0.0.0:${port}`, grpc.ServerCredentials.createInsecure(), () => {
+    gRPCLogger.info(`Server started on port ${port}`)
+  })
+}
+
+main()

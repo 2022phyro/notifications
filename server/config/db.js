@@ -11,14 +11,9 @@ const { dbLogger } = require('../utils/logger')
  * @returns {Promise} A promise that resolves when the connection is successful.
  * @throws {Error} If there is an error connecting to the database.
  */
-// const DB_USER = process.env.DB_USER
-// const DB_PASSWORD = process.env.DB_PASSWORD
-// const DB_HOST = process.env.DB_HOST
-// const DB_PORT = process.env.DB_PORT
-// const DB_NAME = process.env.DB_NAME
-// const databaseUri = `mongodb://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}`
+
 function connect (uri = undefined, attempts = 5) {
-  const databaseUri = uri || 'mongodb://localhost/notifai'
+  const databaseUri = process.env.DB_URI || 'mongodb://localhost/notifai'
 
   mongoose.connect(databaseUri)
     .then(() => {

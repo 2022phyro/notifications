@@ -15,7 +15,7 @@ require('dotenv').config()
 
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 200 // limit each IP to 200 requests per windowMs
+  max: 250 // limit each IP to 200 requests per windowMs
 })
 
 const swaggerDocument = YAML.load(fs.readFileSync('./swagger/docs.yaml', 'utf8'))
@@ -30,7 +30,6 @@ app.use(express.json())
 app.use(helmet())
 app.use(cookieParser())
 app.use(helmet())
-// app.use(cors(["http://localhost:5173"]))
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin
@@ -47,8 +46,9 @@ app.use((err, req, res, next) => {
   console.error(err.stack)
   res.status(500).send('Something broke!')
 })
+const port = process.env.PORT || 3000
 mongoDB()
-app.listen(3000, () => {
-  logger.child({ name: 'Express' }).info('Express server is running on port 3000')
+app.listen(port, () => {
+  logger.child({ name: 'Express' }).info(`Express server is running on port ${port}`)
 })
 startSending().catch(console.error)
