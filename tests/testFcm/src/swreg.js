@@ -47,9 +47,9 @@ const NotifaiClient = {
     this.userId = userId
     this.LEEWAY = 10 * 60 * 1000
     this.store = createStore(!useCookie)
-    this.refreshUrl = 'https://notifai.allcanlearn.me/api/v1/refresh'
+    this.refreshUrl = 'https://notifai.futurdevs.tech/api/v1/refresh'
     Object.assign(this, appCred)
-    this.url = `https://notifai.allcanlearn.me/api/v1/apps/${this._id}`
+    this.url = `https://notifai.futurdevs.tech/api/v1/apps/${this._id}`
   },
 
   getToken () {
