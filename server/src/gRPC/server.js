@@ -32,7 +32,7 @@ const serviceImpl = {
 function main () {
   mongoDB()
   const server = new grpc.Server()
-  const port = process.env.PORT || 3000
+  const port = process.env.GRPC_PORT || 3000
   server.addService(NotificationService.service, serviceImpl)
   server.bindAsync(`0.0.0.0:${port}`, grpc.ServerCredentials.createInsecure(), () => {
     gRPCLogger.info(`Server started on port ${port}`)

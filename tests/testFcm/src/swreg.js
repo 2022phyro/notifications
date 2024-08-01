@@ -42,9 +42,8 @@ const createStore = (useLS) => {
   };
 };
 const NotifaiClient = {
-  init (appCred, userId, useCookie) {
-    this.useCookie = useCookie || false
-    this.userId = userId
+  init (appCred, useCookie) {
+    this.useCookie = useCookie || true
     this.LEEWAY = 10 * 60 * 1000
     this.store = createStore(!useCookie)
     this.refreshUrl = 'https://notifai.futurdevs.tech/api/v1/refresh'
@@ -66,18 +65,12 @@ const NotifaiClient = {
 
   refreshToken() {
 		console.log(this.useCookie)
-    // let refreshToken;
-    // if (!this.useCookie) {
-    //   refreshToken = this.store.getItem('refresh')
-    // }
     return fetch(this.refreshUrl, {
       method: 'POST',
 			...(this.useCookie && { credentials: 'include' }),
       headers: {
         'Content-Type': 'application/json',
-//        ...(this.useCookie &&  { credentials: "include" }),
       },
-      //...(!this.useCookie && { body: JSON.stringify({ refresh: refreshToken }) })
     })
     .then(response => response.json())
     .then(jsonData => {
@@ -91,7 +84,7 @@ const NotifaiClient = {
       return jsonData.data.accessToken
     })
   },
-  subscribe () {
+  subscribe (userId) {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
       navigator.serviceWorker.register('/service-worker.js')
         .then((swReg) => {
@@ -105,7 +98,7 @@ const NotifaiClient = {
                   applicationServerKey: this.publicKey
                 })
                 .then((subscription) => {
-                 this.sendSubscriptionToServer(subscription);
+                 this.sendSubscriptionToServer(subscription, userId);
                   })
                 .catch((err) => {
                   console.log('Failed to subscribe the user: ', err);
@@ -120,7 +113,7 @@ const NotifaiClient = {
         });
     }
   },
-  sendSubscriptionToServer(subscription) {
+  sendSubscriptionToServer(subscription, userId) {
     const target = JSON.parse(JSON.stringify(subscription))
     const body = { endpoint: target.endpoint, ...target.keys }
     body.payload = {
@@ -128,7 +121,7 @@ const NotifaiClient = {
       publicKey: this.publicKey
     }
     console.log("body", body)
-    return fetch(`${this.url}/users/${this.userId}/subscribe`, {
+    return fetch(`${this.url}/users/${userId}/subscribe`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -147,13 +140,13 @@ const NotifaiClient = {
         console.error('Failed to send subscription to server:', error);
     });
   },
-  unsubscribe() {
+  unsubscribe(userId) {
     navigator.serviceWorker.ready.then((registration) => {
       registration.pushManager.getSubscription().then((subscription) => {
         if (subscription) {
           subscription.unsubscribe().then((successful) => {
             console.log('User is unsubscribed:', successful);
-            this.removeSubscriptionFromServer(subscription);
+            this.removeSubscriptionFromServer(subscription, userId);
           }).catch((e) => {
             console.log('Failed to unsubscribe the user:', e);
           })
@@ -161,11 +154,11 @@ const NotifaiClient = {
       })
     })
   },
-  removeSubscriptionFromServer(subscription) {
+  removeSubscriptionFromServer(subscription, userId) {
     const target = JSON.parse(JSON.stringify(subscription))
     const body = { endpoint: target.endpoint, ...target.keys }
     console.log("body", body)
-    return fetch(`${this.url}/users/${this.userId}/unsubscribe`, {
+    return fetch(`${this.url}/users/${userId}/unsubscribe`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

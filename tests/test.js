@@ -1,4 +1,4 @@
-const Notifai = require('../sdk/node')
+const Notifai = require('notifai')
 const apiKey = ''
 const client = new Notifai(apiKey, '')
 const message = {
