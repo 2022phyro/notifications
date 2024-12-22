@@ -1,0 +1,16 @@
+[Unit]
+Description=Notifai gRPC Server Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/server
+ExecStart=/usr/local/bin/npm run start-grpc
+Restart=on-failure
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

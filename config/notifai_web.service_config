@@ -1,0 +1,17 @@
+
+[Unit]
+Description=Notifai Web Server Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/server
+ExecStart=/usr/local/bin/npm start
+Restart=on-failure
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+
